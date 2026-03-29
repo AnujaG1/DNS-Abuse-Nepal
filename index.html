@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DNS Shield Nepal — DNS Abuse Detection Tool</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ===== NAVIGATION ===== -->
+<nav class="navbar">
+  <div class="nav-logo">
+    <span class="logo-icon">🛡</span>
+    <span class="logo-text">DNS Shield <span class="logo-np">Nepal</span></span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#home">Home</a></li>
+    <li><a href="#checker">Check Domain</a></li>
+    <li><a href="#about-dns">DNS Abuse</a></li>
+    <li><a href="#nepal-context">Nepal Context</a></li>
+    <li><a href="#report">Report</a></li>
+  </ul>
+
+</nav>
+
+<!-- ===== HERO SECTION ===== -->
+<section class="hero" id="home">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-content">
+    <div class="hero-tag">🇳🇵 Made for Nepal</div>
+    <h1 class="hero-title">
+      Detect <span class="highlight">DNS Abuse</span><br/>
+      Protect Nepal's Internet
+    </h1>
+    <p class="hero-subtitle">
+      A free tool helping Nepali internet users, businesses, and institutions identify 
+      phishing, malware, and domain abuse — aligned with ICANN's DNS Security Mission.
+    </p>
+    <div class="hero-actions">
+      <a href="#checker" class="btn-primary">Check a Domain →</a>
+      <a href="#about-dns" class="btn-outline">Learn About DNS Abuse</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">5</span><span class="stat-label">Abuse Types Detected</span></div>
+      <div class="stat"><span class="stat-num">3</span><span class="stat-label">Live Blocklists</span></div>
+      <div class="stat"><span class="stat-num">🇳🇵</span><span class="stat-label">Nepal Focused</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="globe-ring ring1"></div>
+    <div class="globe-ring ring2"></div>
+    <div class="globe-ring ring3"></div>
+    <div class="globe-core">
+      <span>DNS</span>
+    </div>
+    <div class="floating-tag tag-ph">⚠ Phishing</div>
+    <div class="floating-tag tag-ml">🦠 Malware</div>
+    <div class="floating-tag tag-sp">📧 Spam</div>
+    <div class="floating-tag tag-ok">✅ Safe</div>
+  </div>
+</section>
+
+<!-- ===== DOMAIN CHECKER SECTION ===== -->
+<section class="checker-section" id="checker">
+  <div class="section-container">
+    <div class="section-label">🔍 DOMAIN CHECKER</div>
+    <h2 class="section-title">Check Any Domain for Abuse</h2>
+    <p class="section-sub">Enter a domain name to analyze it against known DNS abuse patterns used in Nepal and globally.</p>
+
+    <div class="checker-card">
+      <div class="checker-input-row">
+        <div class="input-wrapper">
+          <span class="input-icon">🌐</span>
+          <input type="text" id="domainInput" placeholder="e.g. suspicious-bank.com or hamro-login.xyz" />
+          <button id="clearBtn" class="clear-btn" onclick="clearInput()">✕</button>
+        </div>
+        <button class="check-btn" onclick="checkDomain()">
+          <span id="btnText">Analyze Domain</span>
+        </button>
+      </div>
+
+      <div class="quick-tests">
+        <span class="qt-label">Try these examples:</span>
+        <button class="qt-btn" onclick="setDomain('ncell-offer.xyz')">ncell-offer.xyz</button>
+        <button class="qt-btn" onclick="setDomain('google.com')">google.com</button>
+        <button class="qt-btn" onclick="setDomain('nabilbank-login.tk')">nabilbank-login.tk</button>
+        <button class="qt-btn" onclick="setDomain('nepal.gov.np')">nepal.gov.np</button>
+      </div>
+
+      <!-- RESULTS PANEL -->
+      <div id="resultsPanel" class="results-panel hidden">
+        <div class="results-header">
+          <div id="riskBadge" class="risk-badge"></div>
+          <div id="domainDisplay" class="domain-display"></div>
+          <div id="riskScore" class="risk-score"></div>
+        </div>
+
+        <div class="results-grid">
+          <!-- Checks -->
+          <div class="check-card" id="checkPhishing">
+            <div class="check-icon">🎣</div>
+            <div class="check-info">
+              <div class="check-name">Phishing Detection</div>
+              <div class="check-desc">Checks against phishing patterns targeting Nepali banks & services</div>
+            </div>
+            <div class="check-status" id="statusPhishing">—</div>
+          </div>
+          <div class="check-card" id="checkMalware">
+            <div class="check-icon">🦠</div>
+            <div class="check-info">
+              <div class="check-name">Malware Hosting</div>
+              <div class="check-desc">Detects domains known to distribute malicious software</div>
+            </div>
+            <div class="check-status" id="statusMalware">—</div>
+          </div>
+          <div class="check-card" id="checkSuspTLD">
+            <div class="check-icon">🏷</div>
+            <div class="check-info">
+              <div class="check-name">Suspicious TLD</div>
+              <div class="check-desc">Flags high-risk top-level domains like .xyz, .tk, .ml, .cf</div>
+            </div>
+            <div class="check-status" id="statusSuspTLD">—</div>
+          </div>
+          <div class="check-card" id="checkBrandImperson">
+            <div class="check-icon">🎭</div>
+            <div class="check-info">
+              <div class="check-name">Brand Impersonation</div>
+              <div class="check-desc">Detects fake versions of Nepali brands and government sites</div>
+            </div>
+            <div class="check-status" id="statusBrandImperson">—</div>
+          </div>
+          <div class="check-card" id="checkTyposquat">
+            <div class="check-icon">⌨️</div>
+            <div class="check-info">
+              <div class="check-name">Typosquatting</div>
+              <div class="check-desc">Spots misspellings of popular domains to trick users</div>
+            </div>
+            <div class="check-status" id="statusTyposquat">—</div>
+          </div>
+          <div class="check-card" id="checkBogusDNS">
+            <div class="check-icon">📡</div>
+            <div class="check-info">
+              <div class="check-name">DNS Structure</div>
+              <div class="check-desc">Analyzes domain length, hyphens, and structural anomalies</div>
+            </div>
+            <div class="check-status" id="statusBogusDNS">—</div>
+          </div>
+        </div>
+
+        <div id="summaryBox" class="summary-box"></div>
+        <div id="icannNote" class="icann-note"></div>
+        <div id="reportBtnBox" class="report-btn-box"></div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingPanel" class="loading-panel hidden">
+        <div class="loader-ring"></div>
+        <div class="loader-text" id="loaderText">Initializing scan...</div>
+        <div class="loader-steps">
+          <div class="lstep" id="ls1">⬜ Checking phishing databases...</div>
+          <div class="lstep" id="ls2">⬜ Analyzing TLD reputation...</div>
+          <div class="lstep" id="ls3">⬜ Scanning for brand impersonation...</div>
+          <div class="lstep" id="ls4">⬜ Checking DNS structure...</div>
+          <div class="lstep" id="ls5">⬜ Generating risk report...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ABOUT DNS ABUSE ===== -->
+<section class="info-section" id="about-dns">
+  <div class="section-container">
+    <div class="section-label">📚 EDUCATION</div>
+    <h2 class="section-title">What is DNS Abuse?</h2>
+    <p class="section-sub">As defined by ICANN, DNS abuse covers five core harmful activities that exploit the Domain Name System.</p>
+
+    <div class="abuse-types-grid">
+      <div class="abuse-card">
+        <div class="abuse-number">01</div>
+        <div class="abuse-icon">🎣</div>
+        <h3>Phishing</h3>
+        <p>Fake websites disguised as trusted services (banks, government sites) to steal passwords and personal data. Common in Nepal targeting NIC Asia, Nabil Bank, and eSewa users.</p>
+        <div class="abuse-example">Example: <code>nicasia-login.xyz</code></div>
+      </div>
+      <div class="abuse-card">
+        <div class="abuse-number">02</div>
+        <div class="abuse-icon">🦠</div>
+        <h3>Malware</h3>
+        <p>Domains that distribute malicious software when visited. These can silently infect devices, steal data, or make computers part of botnets.</p>
+        <div class="abuse-example">Example: <code>free-download-nepal.tk</code></div>
+      </div>
+      <div class="abuse-card">
+        <div class="abuse-number">03</div>
+        <div class="abuse-icon">📧</div>
+        <h3>Spam</h3>
+        <p>Domains used to send bulk unsolicited emails. Often used to promote scams, fake job offers, or carry malware links targeting Nepali users abroad.</p>
+        <div class="abuse-example">Example: <code>job-offer-qatar.ml</code></div>
+      </div>
+      <div class="abuse-card">
+        <div class="abuse-number">04</div>
+        <div class="abuse-icon">💻</div>
+        <h3>Botnets</h3>
+        <p>Command-and-control domains that coordinate networks of infected machines. These can be used for DDoS attacks or data theft.</p>
+        <div class="abuse-example">Example: <code>cmd-ctrl-server.pw</code></div>
+      </div>
+      <div class="abuse-card">
+        <div class="abuse-number">05</div>
+        <div class="abuse-icon">🧒</div>
+        <h3>Child Safety Abuse</h3>
+        <p>Domains hosting illegal content involving minors. ICANN and registrars work with law enforcement worldwide to mitigate these domains immediately.</p>
+        <div class="abuse-example">Reported to: <code>NCMEC & Interpol</code></div>
+      </div>
+    </div>
+
+    <div class="icann-alignment-box">
+      <div class="iab-logo">ICANN</div>
+      <div class="iab-content">
+        <h3>ICANN's DNS Abuse Mitigation Program</h3>
+        <p>ICANN enforces DNS abuse obligations through its Contractual Compliance program. Between April 2024 and August 2025, ICANN initiated <strong>400 investigations</strong>, resulting in the mitigation of nearly <strong>20,000 malicious domains</strong>. This tool is inspired by and aligned with ICANN's mission to secure the global DNS for everyone — including users in Nepal.</p>
+        <a href="https://www.icann.org/resources/pages/dns-security-threat-mitigation-2025-11-21-en" target="_blank" class="icann-link">Learn more at ICANN.org →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== NEPAL CONTEXT ===== -->
+<section class="nepal-section" id="nepal-context">
+  <div class="section-container">
+    <div class="section-label">🇳🇵 NEPAL CONTEXT</div>
+    <h2 class="section-title">DNS Abuse in Nepal</h2>
+    <p class="section-sub">Understanding how DNS abuse specifically affects Nepali internet users and institutions.</p>
+
+    <div class="nepal-grid">
+      <div class="nepal-stat-card">
+        <div class="nsc-icon">📱</div>
+        <div class="nsc-num">~15M+</div>
+        <div class="nsc-label">Internet Users in Nepal</div>
+        <div class="nsc-note">Growing rapidly, many first-time users unfamiliar with online threats</div>
+      </div>
+      <div class="nepal-stat-card">
+        <div class="nsc-icon">🏦</div>
+        <div class="nsc-num">Top Target</div>
+        <div class="nsc-label">Banking & FinTech Phishing</div>
+        <div class="nsc-note">eSewa, Khalti, NIC Asia, Nabil Bank frequently impersonated</div>
+      </div>
+      <div class="nepal-stat-card">
+        <div class="nsc-icon">✈️</div>
+        <div class="nsc-num">4M+</div>
+        <div class="nsc-label">Nepali Diaspora at Risk</div>
+        <div class="nsc-note">Fake job offers and remittance scam domains target workers abroad</div>
+      </div>
+      <div class="nepal-stat-card">
+        <div class="nsc-icon">🏛</div>
+        <div class="nsc-num">.gov.np</div>
+        <div class="nsc-label">Government Sites Impersonated</div>
+        <div class="nsc-note">Fake passport, election, and tax portals steal citizen data</div>
+      </div>
+    </div>
+
+    <div class="common-threats">
+      <h3>Common DNS Abuse Patterns in Nepal</h3>
+      <div class="threat-list">
+        <div class="threat-item ti-bad">
+          <span class="ti-icon">⚠️</span>
+          <div>
+            <strong>Fake Banking Portals</strong>
+            <p>Domains like <code>nabilbank-login.com</code> or <code>nicasia-secure.xyz</code> trick users into entering credentials.</p>
+          </div>
+        </div>
+        <div class="threat-item ti-bad">
+          <span class="ti-icon">⚠️</span>
+          <div>
+            <strong>Fake Government Services</strong>
+            <p>Domains mimicking <code>nagarikta.gov.np</code> or <code>passport.gov.np</code> to steal identity information.</p>
+          </div>
+        </div>
+        <div class="threat-item ti-bad">
+          <span class="ti-icon">⚠️</span>
+          <div>
+            <strong>Mobile Recharge Scams</strong>
+            <p>Sites pretending to offer free Ncell/NTC recharge, harvesting phone numbers and OTPs.</p>
+          </div>
+        </div>
+        <div class="threat-item ti-good">
+          <span class="ti-icon">✅</span>
+          <div>
+            <strong>How to Stay Safe</strong>
+            <p>Always verify the domain carefully. Official Nepali government sites use <code>.gov.np</code>. Banks use verified <code>.com.np</code> or official domains.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== REPORT SECTION ===== -->
+<section class="report-section" id="report">
+  <div class="section-container">
+    <div class="section-label">🚨 REPORT ABUSE</div>
+    <h2 class="section-title">Report a Suspicious Domain</h2>
+    <p class="section-sub">Found a malicious domain? Report it to help protect the Nepali internet community.</p>
+
+    <div class="report-layout">
+      <div class="report-form-card">
+        <h3>Submit a Report</h3>
+        <div class="form-group">
+          <label>Suspicious Domain *</label>
+          <input type="text" id="reportDomain" placeholder="e.g. fake-ncell.xyz" />
+        </div>
+        <div class="form-group">
+          <label>Type of Abuse *</label>
+          <select id="abuseType">
+            <option value="">— Select abuse type —</option>
+            <option value="phishing">Phishing / Fake Login Page</option>
+            <option value="malware">Malware Distribution</option>
+            <option value="spam">Spam Campaign</option>
+            <option value="impersonation">Brand / Government Impersonation</option>
+            <option value="scam">Online Scam</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="reportDesc" placeholder="Describe what you observed (optional but helpful)..." rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Your Email (optional)</label>
+          <input type="email" id="reportEmail" placeholder="for follow-up only" />
+        </div>
+        <button class="submit-report-btn" onclick="submitReport()">Submit Report 🚨</button>
+        <div id="reportSuccess" class="report-success hidden">
+          ✅ Thank you! Your report has been logged. This helps protect Nepali internet users.
+        </div>
+      </div>
+
+      <div class="report-links-card">
+        <h3>Official Reporting Channels</h3>
+        <div class="report-link-item">
+          <div class="rli-icon">🌐</div>
+          <div>
+            <strong>ICANN Contractual Compliance</strong>
+            <p>For registrar/registry violations and DNS abuse</p>
+            <a href="https://www.icann.org/compliance/complaint" target="_blank">icann.org/compliance →</a>
+          </div>
+        </div>
+        <div class="report-link-item">
+          <div class="rli-icon">🇳🇵</div>
+          <div>
+            <strong>Nepal Telecom Authority (NTA)</strong>
+            <p>Nepal's internet regulatory body</p>
+            <a href="https://www.nta.gov.np" target="_blank">nta.gov.np →</a>
+          </div>
+        </div>
+        <div class="report-link-item">
+          <div class="rli-icon">🚔</div>
+          <div>
+            <strong>Nepal Police Cyber Bureau</strong>
+            <p>For cybercrime including online fraud</p>
+            <a href="https://www.nepalpolice.gov.np" target="_blank">nepalpolice.gov.np →</a>
+          </div>
+        </div>
+        <div class="report-link-item">
+          <div class="rli-icon">📧</div>
+          <div>
+            <strong>PhishTank</strong>
+            <p>Global phishing domain database</p>
+            <a href="https://www.phishtank.com" target="_blank">phishtank.com →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo-text" style="font-size:1.3rem">🛡 DNS Shield Nepal</div>
+      <p>Built to align with ICANN's mission of a secure, stable, and resilient DNS — for Nepal and the world.</p>
+    </div>
+    <div class="footer-links">
+      <div class="fl-col">
+        <strong>Resources</strong>
+        <a href="https://www.icann.org" target="_blank">ICANN.org</a>
+        <a href="https://www.icann.org/public-responsibility-support/nextgen" target="_blank">NextGen@ICANN</a>
+        <a href="https://www.nta.gov.np" target="_blank">Nepal NTA</a>
+      </div>
+      <div class="fl-col">
+        <strong>Project</strong>
+        <a href="#checker">Domain Checker</a>
+        <a href="#about-dns">DNS Education</a>
+        <a href="#report">Report Abuse</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>🇳🇵 Made in Nepal · Submitted for ICANN NextGen@ICANN Fellowship · Open-source educational project</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

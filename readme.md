@@ -37,7 +37,7 @@ Example for `ncell-offer.xyz`:
 - N-gram Suspicion: 0.3 × 6.0 = **1.80**
 - **Total → 46.54 / 120 × 100 = ~38 / HIGH RISK**
 
-### 6 Classification Modules
+###  Classification Modules
 
 1. **Phishing Module** — Keyword-weighted scoring
 2. **Malware/DGA Module** — Entropy + digit ratio + TLD + consonant clusters

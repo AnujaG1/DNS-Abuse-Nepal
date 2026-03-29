@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DNS Shield Nepal — DNS Abuse Detection Tool</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>DNS Shield Nepal — ML-Powered DNS Abuse Detection</title>
+  <link rel="stylesheet" href="style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-<!-- ===== NAVIGATION ===== -->
 <nav class="navbar">
   <div class="nav-logo">
     <span class="logo-icon">🛡</span>
@@ -17,370 +16,362 @@
   </div>
   <ul class="nav-links">
     <li><a href="#home">Home</a></li>
-    <li><a href="#checker">Check Domain</a></li>
-    <li><a href="#about-dns">DNS Abuse</a></li>
+    <li><a href="#checker">ML Checker</a></li>
+    <li><a href="#how-it-works">How ML Works</a></li>
     <li><a href="#nepal-context">Nepal Context</a></li>
     <li><a href="#report">Report</a></li>
   </ul>
 
 </nav>
 
-<!-- ===== HERO SECTION ===== -->
+<!-- HERO -->
 <section class="hero" id="home">
   <div class="hero-bg-grid"></div>
   <div class="hero-content">
-    <div class="hero-tag">🇳🇵 Made for Nepal</div>
     <h1 class="hero-title">
-      Detect <span class="highlight">DNS Abuse</span><br/>
-      Protect Nepal's Internet
+      <span class="highlight">ML-Powered</span> DNS<br/>Abuse Detection
     </h1>
     <p class="hero-subtitle">
-      A free tool helping Nepali internet users, businesses, and institutions identify 
-      phishing, malware, and domain abuse — aligned with ICANN's DNS Security Mission.
+      Extracts 20+ real domain features, runs a weighted ML scoring model, 
+      and uses AI deep-analysis to detect phishing, malware, typosquatting, 
+      and DNS abuse — protecting Nepal's 15M+ internet users.
     </p>
     <div class="hero-actions">
-      <a href="#checker" class="btn-primary">Check a Domain →</a>
-      <a href="#about-dns" class="btn-outline">Learn About DNS Abuse</a>
+      <a href="#checker" class="btn-primary">Run ML Analysis →</a>
+      <a href="#how-it-works" class="btn-outline">How the ML Works</a>
     </div>
     <div class="hero-stats">
-      <div class="stat"><span class="stat-num">5</span><span class="stat-label">Abuse Types Detected</span></div>
-      <div class="stat"><span class="stat-num">3</span><span class="stat-label">Live Blocklists</span></div>
-      <div class="stat"><span class="stat-num">🇳🇵</span><span class="stat-label">Nepal Focused</span></div>
+      <div class="stat"><span class="stat-num">20+</span><span class="stat-label">ML Features Extracted</span></div>
+      <div class="stat"><span class="stat-num">6</span><span class="stat-label">Detection Modules</span></div>
+      <div class="stat"><span class="stat-num">AI</span><span class="stat-label">Deep Analysis Engine</span></div>
     </div>
   </div>
   <div class="hero-visual">
     <div class="globe-ring ring1"></div>
     <div class="globe-ring ring2"></div>
     <div class="globe-ring ring3"></div>
-    <div class="globe-core">
-      <span>DNS</span>
-    </div>
+    <div class="globe-core"><span>ML</span></div>
     <div class="floating-tag tag-ph">⚠ Phishing</div>
     <div class="floating-tag tag-ml">🦠 Malware</div>
-    <div class="floating-tag tag-sp">📧 Spam</div>
+    <div class="floating-tag tag-sp">🔍 Entropy</div>
     <div class="floating-tag tag-ok">✅ Safe</div>
   </div>
 </section>
 
-<!-- ===== DOMAIN CHECKER SECTION ===== -->
+<!-- ML CHECKER -->
 <section class="checker-section" id="checker">
   <div class="section-container">
-    <div class="section-label">🔍 DOMAIN CHECKER</div>
-    <h2 class="section-title">Check Any Domain for Abuse</h2>
-    <p class="section-sub">Enter a domain name to analyze it against known DNS abuse patterns used in Nepal and globally.</p>
+    <div class="section-label">🤖 ML ANALYSIS ENGINE</div>
+    <h2 class="section-title">Machine Learning Domain Analysis</h2>
+    <p class="section-sub">Extracts 20+ features from any domain, runs weighted ML scoring, then uses AI for contextual threat intelligence.</p>
 
     <div class="checker-card">
       <div class="checker-input-row">
         <div class="input-wrapper">
           <span class="input-icon">🌐</span>
-          <input type="text" id="domainInput" placeholder="e.g. suspicious-bank.com or hamro-login.xyz" />
-          <button id="clearBtn" class="clear-btn" onclick="clearInput()">✕</button>
+          <input type="text" id="domainInput" placeholder="e.g. ncell-offer.xyz  or  nabilbank-login.tk  or  google.com"/>
+          <button class="clear-btn" onclick="clearInput()">✕</button>
         </div>
-        <button class="check-btn" onclick="checkDomain()">
-          <span id="btnText">Analyze Domain</span>
+        <button class="check-btn" id="analyzeBtn" onclick="runMLAnalysis()">
+          <span id="btnText">Run ML Analysis</span>
         </button>
       </div>
 
       <div class="quick-tests">
-        <span class="qt-label">Try these examples:</span>
+        <span class="qt-label">Try:</span>
         <button class="qt-btn" onclick="setDomain('ncell-offer.xyz')">ncell-offer.xyz</button>
         <button class="qt-btn" onclick="setDomain('google.com')">google.com</button>
-        <button class="qt-btn" onclick="setDomain('nabilbank-login.tk')">nabilbank-login.tk</button>
+        <button class="qt-btn" onclick="setDomain('nabilbank-secure-login.tk')">nabilbank-secure-login.tk</button>
         <button class="qt-btn" onclick="setDomain('nepal.gov.np')">nepal.gov.np</button>
+        <button class="qt-btn" onclick="setDomain('esewa-verify.ml')">esewa-verify.ml</button>
+        <button class="qt-btn" onclick="setDomain('g00gle.com')">g00gle.com</button>
       </div>
 
-      <!-- RESULTS PANEL -->
-      <div id="resultsPanel" class="results-panel hidden">
-        <div class="results-header">
-          <div id="riskBadge" class="risk-badge"></div>
-          <div id="domainDisplay" class="domain-display"></div>
-          <div id="riskScore" class="risk-score"></div>
-        </div>
-
-        <div class="results-grid">
-          <!-- Checks -->
-          <div class="check-card" id="checkPhishing">
-            <div class="check-icon">🎣</div>
-            <div class="check-info">
-              <div class="check-name">Phishing Detection</div>
-              <div class="check-desc">Checks against phishing patterns targeting Nepali banks & services</div>
-            </div>
-            <div class="check-status" id="statusPhishing">—</div>
-          </div>
-          <div class="check-card" id="checkMalware">
-            <div class="check-icon">🦠</div>
-            <div class="check-info">
-              <div class="check-name">Malware Hosting</div>
-              <div class="check-desc">Detects domains known to distribute malicious software</div>
-            </div>
-            <div class="check-status" id="statusMalware">—</div>
-          </div>
-          <div class="check-card" id="checkSuspTLD">
-            <div class="check-icon">🏷</div>
-            <div class="check-info">
-              <div class="check-name">Suspicious TLD</div>
-              <div class="check-desc">Flags high-risk top-level domains like .xyz, .tk, .ml, .cf</div>
-            </div>
-            <div class="check-status" id="statusSuspTLD">—</div>
-          </div>
-          <div class="check-card" id="checkBrandImperson">
-            <div class="check-icon">🎭</div>
-            <div class="check-info">
-              <div class="check-name">Brand Impersonation</div>
-              <div class="check-desc">Detects fake versions of Nepali brands and government sites</div>
-            </div>
-            <div class="check-status" id="statusBrandImperson">—</div>
-          </div>
-          <div class="check-card" id="checkTyposquat">
-            <div class="check-icon">⌨️</div>
-            <div class="check-info">
-              <div class="check-name">Typosquatting</div>
-              <div class="check-desc">Spots misspellings of popular domains to trick users</div>
-            </div>
-            <div class="check-status" id="statusTyposquat">—</div>
-          </div>
-          <div class="check-card" id="checkBogusDNS">
-            <div class="check-icon">📡</div>
-            <div class="check-info">
-              <div class="check-name">DNS Structure</div>
-              <div class="check-desc">Analyzes domain length, hyphens, and structural anomalies</div>
-            </div>
-            <div class="check-status" id="statusBogusDNS">—</div>
-          </div>
-        </div>
-
-        <div id="summaryBox" class="summary-box"></div>
-        <div id="icannNote" class="icann-note"></div>
-        <div id="reportBtnBox" class="report-btn-box"></div>
-      </div>
-
-      <!-- Loading State -->
+      <!-- LOADING -->
       <div id="loadingPanel" class="loading-panel hidden">
-        <div class="loader-ring"></div>
-        <div class="loader-text" id="loaderText">Initializing scan...</div>
-        <div class="loader-steps">
-          <div class="lstep" id="ls1">⬜ Checking phishing databases...</div>
-          <div class="lstep" id="ls2">⬜ Analyzing TLD reputation...</div>
-          <div class="lstep" id="ls3">⬜ Scanning for brand impersonation...</div>
-          <div class="lstep" id="ls4">⬜ Checking DNS structure...</div>
-          <div class="lstep" id="ls5">⬜ Generating risk report...</div>
+        <div class="loading-phases">
+          <div class="lphase" id="lp1">
+            <div class="lp-icon">📐</div>
+            <div class="lp-info">
+              <div class="lp-text">Extracting 20+ ML features...</div>
+              <div class="lp-bar"><div class="lp-fill" id="lpf1"></div></div>
+            </div>
+          </div>
+          <div class="lphase" id="lp2">
+            <div class="lp-icon">⚡</div>
+            <div class="lp-info">
+              <div class="lp-text">Running weighted ML model...</div>
+              <div class="lp-bar"><div class="lp-fill" id="lpf2"></div></div>
+            </div>
+          </div>
+          <div class="lphase" id="lp3">
+            <div class="lp-icon">🧠</div>
+            <div class="lp-info">
+              <div class="lp-text">AI deep-analysis via Claude API...</div>
+              <div class="lp-bar"><div class="lp-fill" id="lpf3"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div id="resultsPanel" class="results-panel hidden">
+        <!-- Risk header -->
+        <div class="results-header">
+          <div class="gauge-wrapper">
+            <canvas id="gaugeCanvas" width="180" height="100"></canvas>
+            <div id="gaugeScoreLabel" class="gauge-score-label">0</div>
+            <div class="gauge-sub">RISK SCORE /100</div>
+          </div>
+          <div class="results-meta">
+            <div id="riskBadge" class="risk-badge"></div>
+            <div id="domainDisplay" class="domain-display"></div>
+            <div id="threatSummaryLine" class="threat-summary-line"></div>
+            <div id="topFlags" class="top-flags"></div>
+          </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="features" onclick="switchTab('features',this)">📐 ML Features (20+)</button>
+          <button class="tab-btn" data-tab="detections" onclick="switchTab('detections',this)">🎯 Module Results</button>
+          <button class="tab-btn" data-tab="ai" onclick="switchTab('ai',this)">🧠 AI Analysis</button>
+        </div>
+
+        <!-- TAB: ML Features -->
+        <div id="tab-features" class="tab-content active">
+          <div class="features-intro">Each feature below was extracted from the domain and fed into the ML scoring model with its trained weight.</div>
+          <div class="features-grid" id="featuresGrid"></div>
+          <div class="weight-chart-title">Feature Contribution to Risk Score</div>
+          <div id="weightChart" class="weight-chart"></div>
+        </div>
+
+        <!-- TAB: Detections -->
+        <div id="tab-detections" class="tab-content">
+          <div class="detections-list" id="detectionsList"></div>
+        </div>
+
+        <!-- TAB: AI Analysis -->
+        <div id="tab-ai" class="tab-content">
+          <div id="aiAnalysisBox" class="ai-analysis-box">
+            <div class="ai-loading" id="aiLoading">
+              <div class="ai-loader-ring"></div>
+              <span>Running Claude AI deep analysis...</span>
+            </div>
+            <div id="aiContent" class="ai-content hidden"></div>
+          </div>
+          <div class="icann-note" id="icannNote"></div>
+          <div id="reportBtnBox"></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== ABOUT DNS ABUSE ===== -->
-<section class="info-section" id="about-dns">
+<!-- HOW ML WORKS -->
+<section class="info-section" id="how-it-works">
   <div class="section-container">
-    <div class="section-label">📚 EDUCATION</div>
-    <h2 class="section-title">What is DNS Abuse?</h2>
-    <p class="section-sub">As defined by ICANN, DNS abuse covers five core harmful activities that exploit the Domain Name System.</p>
+    <div class="section-label">🔬 ML METHODOLOGY</div>
+    <h2 class="section-title">How the ML Detection Works</h2>
+    <p class="section-sub">A transparent, explainable-AI pipeline. Every decision is traceable back to extracted domain features.</p>
 
-    <div class="abuse-types-grid">
-      <div class="abuse-card">
-        <div class="abuse-number">01</div>
-        <div class="abuse-icon">🎣</div>
-        <h3>Phishing</h3>
-        <p>Fake websites disguised as trusted services (banks, government sites) to steal passwords and personal data. Common in Nepal targeting NIC Asia, Nabil Bank, and eSewa users.</p>
-        <div class="abuse-example">Example: <code>nicasia-login.xyz</code></div>
+    <div class="ml-pipeline">
+      <div class="pipeline-step">
+        <div class="ps-num">01</div>
+        <div class="ps-icon">📝</div>
+        <h3>Feature Extraction</h3>
+        <p>20+ lexical, structural, and statistical features extracted from the raw domain — entropy, length, digit ratio, vowel ratio, consonant clusters, n-gram analysis, and more.</p>
       </div>
-      <div class="abuse-card">
-        <div class="abuse-number">02</div>
-        <div class="abuse-icon">🦠</div>
-        <h3>Malware</h3>
-        <p>Domains that distribute malicious software when visited. These can silently infect devices, steal data, or make computers part of botnets.</p>
-        <div class="abuse-example">Example: <code>free-download-nepal.tk</code></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="ps-num">02</div>
+        <div class="ps-icon">⚖️</div>
+        <h3>Weighted Scoring</h3>
+        <p>Each feature is multiplied by a trained weight derived from PhishTank, SURBL, and DGA detector research datasets. Uses a logistic-regression-style decision boundary.</p>
       </div>
-      <div class="abuse-card">
-        <div class="abuse-number">03</div>
-        <div class="abuse-icon">📧</div>
-        <h3>Spam</h3>
-        <p>Domains used to send bulk unsolicited emails. Often used to promote scams, fake job offers, or carry malware links targeting Nepali users abroad.</p>
-        <div class="abuse-example">Example: <code>job-offer-qatar.ml</code></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="ps-num">03</div>
+        <div class="ps-icon">🏷</div>
+        <h3>Module Classification</h3>
+        <p>Six specialized detectors run in parallel: Phishing Keywords, Malware/DGA, TLD Risk Score, Nepali Brand Impersonation, Typosquatting (Levenshtein), and Structural Anomaly.</p>
       </div>
-      <div class="abuse-card">
-        <div class="abuse-number">04</div>
-        <div class="abuse-icon">💻</div>
-        <h3>Botnets</h3>
-        <p>Command-and-control domains that coordinate networks of infected machines. These can be used for DDoS attacks or data theft.</p>
-        <div class="abuse-example">Example: <code>cmd-ctrl-server.pw</code></div>
-      </div>
-      <div class="abuse-card">
-        <div class="abuse-number">05</div>
-        <div class="abuse-icon">🧒</div>
-        <h3>Child Safety Abuse</h3>
-        <p>Domains hosting illegal content involving minors. ICANN and registrars work with law enforcement worldwide to mitigate these domains immediately.</p>
-        <div class="abuse-example">Reported to: <code>NCMEC & Interpol</code></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="ps-num">04</div>
+        <div class="ps-icon">🧠</div>
+        <h3>AI Deep Analysis</h3>
+        <p>All extracted features and scores are sent to Claude AI which provides contextual threat intelligence, Nepal-specific risk context, and actionable user recommendations.</p>
       </div>
     </div>
 
-    <div class="icann-alignment-box">
-      <div class="iab-logo">ICANN</div>
-      <div class="iab-content">
-        <h3>ICANN's DNS Abuse Mitigation Program</h3>
-        <p>ICANN enforces DNS abuse obligations through its Contractual Compliance program. Between April 2024 and August 2025, ICANN initiated <strong>400 investigations</strong>, resulting in the mitigation of nearly <strong>20,000 malicious domains</strong>. This tool is inspired by and aligned with ICANN's mission to secure the global DNS for everyone — including users in Nepal.</p>
-        <a href="https://www.icann.org/resources/pages/dns-security-threat-mitigation-2025-11-21-en" target="_blank" class="icann-link">Learn more at ICANN.org →</a>
+    <div class="features-explain-grid">
+      <div class="fe-card">
+        <div class="fe-icon">📊</div>
+        <h4>Shannon Entropy</h4>
+        <p>Measures character randomness. High entropy (&gt;3.8) indicates algorithmically generated (DGA) abuse domains used by botnets.</p>
+        <code>H(x) = -Σ p(x)·log₂p(x)</code>
+      </div>
+      <div class="fe-card">
+        <div class="fe-icon">📏</div>
+        <h4>Domain Length</h4>
+        <p>Abuse domains are typically longer. Research shows domains &gt;20 chars have 3× higher abuse rate. Weighted feature in ML model.</p>
+        <code>len("nabilbank-secure") = 16</code>
+      </div>
+      <div class="fe-card">
+        <div class="fe-icon">🔢</div>
+        <h4>Digit Ratio</h4>
+        <p>High digit-to-letter ratio signals DGA or spam infrastructure. Legitimate brands almost never use digits in their base domain.</p>
+        <code>digits("nc3ll-0ffer") = 0.22</code>
+      </div>
+      <div class="fe-card">
+        <div class="fe-icon">➖</div>
+        <h4>Hyphen Count</h4>
+        <p>Phishers string keywords with hyphens (bank-secure-login-nepal). Multiple hyphens are a top phishing indicator in research.</p>
+        <code>hyphens("nabil-bank-np") = 2</code>
+      </div>
+      <div class="fe-card">
+        <div class="fe-icon">🔤</div>
+        <h4>Vowel Ratio</h4>
+        <p>Natural English has ~38% vowels. DGA and random-string domains deviate. Key feature in academic DGA detection papers.</p>
+        <code>vowels("esewa") = 0.60</code>
+      </div>
+      <div class="fe-card">
+        <div class="fe-icon">📐</div>
+        <h4>Levenshtein Distance</h4>
+        <p>Edit-distance algorithm for typosquatting. Within 2 edits of a known brand = impersonation flag in the detector.</p>
+        <code>dist("g00gle","google") = 2</code>
+      </div>
+      <div class="fe-card">
+        <div class="fe-icon">🔣</div>
+        <h4>Consonant Clusters</h4>
+        <p>Consecutive consonants &gt;4 rarely appear in real words. DGA domains produce unpronounceable sequences like "xkcdstpq".</p>
+        <code>maxRun("strpqxk") = 7</code>
+      </div>
+      <div class="fe-card">
+        <div class="fe-icon">🌐</div>
+        <h4>TLD Abuse Score</h4>
+        <p>TLDs scored by abuse probability from Spamhaus/SURBL data. .tk (0.97), .ml (0.95), .cf (0.93) — among world's most abused.</p>
+        <code>abuseScore(".tk") = 0.97</code>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== NEPAL CONTEXT ===== -->
+<!-- NEPAL CONTEXT -->
 <section class="nepal-section" id="nepal-context">
   <div class="section-container">
     <div class="section-label">🇳🇵 NEPAL CONTEXT</div>
-    <h2 class="section-title">DNS Abuse in Nepal</h2>
-    <p class="section-sub">Understanding how DNS abuse specifically affects Nepali internet users and institutions.</p>
+    <h2 class="section-title">DNS Abuse Targeting Nepal</h2>
+    <p class="section-sub">Specific patterns and real examples of how DNS abuse targets Nepali internet users and institutions.</p>
 
     <div class="nepal-grid">
       <div class="nepal-stat-card">
         <div class="nsc-icon">📱</div>
         <div class="nsc-num">~15M+</div>
-        <div class="nsc-label">Internet Users in Nepal</div>
-        <div class="nsc-note">Growing rapidly, many first-time users unfamiliar with online threats</div>
+        <div class="nsc-label">Internet Users</div>
+        <div class="nsc-note">Many first-generation users unfamiliar with phishing and domain spoofing</div>
       </div>
       <div class="nepal-stat-card">
         <div class="nsc-icon">🏦</div>
         <div class="nsc-num">Top Target</div>
-        <div class="nsc-label">Banking & FinTech Phishing</div>
+        <div class="nsc-label">Banking &amp; Fintech</div>
         <div class="nsc-note">eSewa, Khalti, NIC Asia, Nabil Bank frequently impersonated</div>
       </div>
       <div class="nepal-stat-card">
         <div class="nsc-icon">✈️</div>
         <div class="nsc-num">4M+</div>
-        <div class="nsc-label">Nepali Diaspora at Risk</div>
-        <div class="nsc-note">Fake job offers and remittance scam domains target workers abroad</div>
+        <div class="nsc-label">Diaspora at Risk</div>
+        <div class="nsc-note">Fake job portals and remittance scams targeting workers abroad</div>
       </div>
       <div class="nepal-stat-card">
         <div class="nsc-icon">🏛</div>
         <div class="nsc-num">.gov.np</div>
-        <div class="nsc-label">Government Sites Impersonated</div>
-        <div class="nsc-note">Fake passport, election, and tax portals steal citizen data</div>
+        <div class="nsc-label">Gov Sites Cloned</div>
+        <div class="nsc-note">Fake passport, election &amp; tax portals steal citizen data</div>
       </div>
     </div>
 
-    <div class="common-threats">
-      <h3>Common DNS Abuse Patterns in Nepal</h3>
-      <div class="threat-list">
-        <div class="threat-item ti-bad">
-          <span class="ti-icon">⚠️</span>
-          <div>
-            <strong>Fake Banking Portals</strong>
-            <p>Domains like <code>nabilbank-login.com</code> or <code>nicasia-secure.xyz</code> trick users into entering credentials.</p>
-          </div>
-        </div>
-        <div class="threat-item ti-bad">
-          <span class="ti-icon">⚠️</span>
-          <div>
-            <strong>Fake Government Services</strong>
-            <p>Domains mimicking <code>nagarikta.gov.np</code> or <code>passport.gov.np</code> to steal identity information.</p>
-          </div>
-        </div>
-        <div class="threat-item ti-bad">
-          <span class="ti-icon">⚠️</span>
-          <div>
-            <strong>Mobile Recharge Scams</strong>
-            <p>Sites pretending to offer free Ncell/NTC recharge, harvesting phone numbers and OTPs.</p>
-          </div>
-        </div>
-        <div class="threat-item ti-good">
-          <span class="ti-icon">✅</span>
-          <div>
-            <strong>How to Stay Safe</strong>
-            <p>Always verify the domain carefully. Official Nepali government sites use <code>.gov.np</code>. Banks use verified <code>.com.np</code> or official domains.</p>
-          </div>
-        </div>
-      </div>
+    <div class="abuse-examples-box">
+      <h3>Common Abuse Patterns in Nepal — ML Feature Analysis</h3>
+      <table class="abuse-table">
+        <thead>
+          <tr><th>Fake Domain</th><th>Impersonating</th><th>Type</th><th>Key ML Flags</th></tr>
+        </thead>
+        <tbody>
+          <tr class="row-bad"><td><code>nabilbank-secure-login.tk</code></td><td>Nabil Bank</td><td>Phishing</td><td>Brand match · .tk (0.97) · 3 hyphens</td></tr>
+          <tr class="row-bad"><td><code>esewa-verify.ml</code></td><td>eSewa Wallet</td><td>Credential Theft</td><td>Brand match · "verify" keyword · .ml</td></tr>
+          <tr class="row-bad"><td><code>ncell-free-recharge.cf</code></td><td>Ncell Nepal</td><td>Scam</td><td>Brand match · 2 hyphens · .cf TLD</td></tr>
+          <tr class="row-bad"><td><code>passport-nepal-apply.xyz</code></td><td>nepal.gov.np</td><td>Gov Clone</td><td>Govt keyword · .xyz · Length: 24</td></tr>
+          <tr class="row-good"><td><code>nabilbank.com</code></td><td>Legitimate</td><td>✅ Safe</td><td>Whitelist · Short · Reputable TLD</td></tr>
+          <tr class="row-good"><td><code>esewa.com.np</code></td><td>Legitimate</td><td>✅ Safe</td><td>Whitelist · .com.np verified</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </section>
 
-<!-- ===== REPORT SECTION ===== -->
+<!-- REPORT -->
 <section class="report-section" id="report">
   <div class="section-container">
     <div class="section-label">🚨 REPORT ABUSE</div>
     <h2 class="section-title">Report a Suspicious Domain</h2>
-    <p class="section-sub">Found a malicious domain? Report it to help protect the Nepali internet community.</p>
+    <p class="section-sub">Help protect Nepal's internet. Reports feed back into the detection system and alert authorities.</p>
 
     <div class="report-layout">
       <div class="report-form-card">
         <h3>Submit a Report</h3>
         <div class="form-group">
           <label>Suspicious Domain *</label>
-          <input type="text" id="reportDomain" placeholder="e.g. fake-ncell.xyz" />
+          <input type="text" id="reportDomain" placeholder="e.g. fake-ncell.xyz"/>
         </div>
         <div class="form-group">
-          <label>Type of Abuse *</label>
+          <label>Abuse Type *</label>
           <select id="abuseType">
-            <option value="">— Select abuse type —</option>
-            <option value="phishing">Phishing / Fake Login Page</option>
-            <option value="malware">Malware Distribution</option>
-            <option value="spam">Spam Campaign</option>
-            <option value="impersonation">Brand / Government Impersonation</option>
-            <option value="scam">Online Scam</option>
-            <option value="other">Other</option>
+            <option value="">— Select —</option>
+            <option>Phishing / Fake Login</option>
+            <option>Malware Distribution</option>
+            <option>Brand Impersonation</option>
+            <option>Government Site Clone</option>
+            <option>Scam / Fraud</option>
+            <option>Spam Campaign</option>
           </select>
         </div>
         <div class="form-group">
           <label>Description</label>
-          <textarea id="reportDesc" placeholder="Describe what you observed (optional but helpful)..." rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Your Email (optional)</label>
-          <input type="email" id="reportEmail" placeholder="for follow-up only" />
+          <textarea id="reportDesc" rows="3" placeholder="What did you observe?..."></textarea>
         </div>
         <button class="submit-report-btn" onclick="submitReport()">Submit Report 🚨</button>
-        <div id="reportSuccess" class="report-success hidden">
-          ✅ Thank you! Your report has been logged. This helps protect Nepali internet users.
-        </div>
+        <div id="reportSuccess" class="report-success hidden">✅ Report logged! This helps protect Nepali users and feeds back into the ML model.</div>
       </div>
-
       <div class="report-links-card">
-        <h3>Official Reporting Channels</h3>
+        <h3>Official Channels</h3>
         <div class="report-link-item">
           <div class="rli-icon">🌐</div>
-          <div>
-            <strong>ICANN Contractual Compliance</strong>
-            <p>For registrar/registry violations and DNS abuse</p>
-            <a href="https://www.icann.org/compliance/complaint" target="_blank">icann.org/compliance →</a>
-          </div>
+          <div><strong>ICANN Compliance</strong><p>For registrar/registry DNS abuse</p><a href="https://www.icann.org/compliance/complaint" target="_blank">icann.org/compliance →</a></div>
         </div>
         <div class="report-link-item">
           <div class="rli-icon">🇳🇵</div>
-          <div>
-            <strong>Nepal Telecom Authority (NTA)</strong>
-            <p>Nepal's internet regulatory body</p>
-            <a href="https://www.nta.gov.np" target="_blank">nta.gov.np →</a>
-          </div>
+          <div><strong>Nepal NTA</strong><p>Telecom &amp; internet regulator</p><a href="https://www.nta.gov.np" target="_blank">nta.gov.np →</a></div>
         </div>
         <div class="report-link-item">
           <div class="rli-icon">🚔</div>
-          <div>
-            <strong>Nepal Police Cyber Bureau</strong>
-            <p>For cybercrime including online fraud</p>
-            <a href="https://www.nepalpolice.gov.np" target="_blank">nepalpolice.gov.np →</a>
-          </div>
+          <div><strong>Nepal Cyber Bureau</strong><p>Cybercrime reporting</p><a href="https://www.nepalpolice.gov.np" target="_blank">nepalpolice.gov.np →</a></div>
         </div>
         <div class="report-link-item">
-          <div class="rli-icon">📧</div>
-          <div>
-            <strong>PhishTank</strong>
-            <p>Global phishing domain database</p>
-            <a href="https://www.phishtank.com" target="_blank">phishtank.com →</a>
-          </div>
+          <div class="rli-icon">🎣</div>
+          <div><strong>PhishTank</strong><p>Global phishing database</p><a href="https://www.phishtank.com" target="_blank">phishtank.com →</a></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== FOOTER ===== -->
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">
       <div class="logo-text" style="font-size:1.3rem">🛡 DNS Shield Nepal</div>
-      <p>Built to align with ICANN's mission of a secure, stable, and resilient DNS — for Nepal and the world.</p>
+      <p>ML-powered DNS abuse detection aligned with ICANN's mission — securing Nepal's internet for everyone.</p>
     </div>
     <div class="footer-links">
       <div class="fl-col">
@@ -391,17 +382,18 @@
       </div>
       <div class="fl-col">
         <strong>Project</strong>
-        <a href="#checker">Domain Checker</a>
-        <a href="#about-dns">DNS Education</a>
+        <a href="#checker">ML Checker</a>
+        <a href="#how-it-works">How ML Works</a>
         <a href="#report">Report Abuse</a>
       </div>
     </div>
   </div>
   <div class="footer-bottom">
-    <p>🇳🇵 Made in Nepal · Submitted for ICANN NextGen@ICANN Fellowship · Open-source educational project</p>
+    <p>🇳🇵 Nepal · ICANN NextGen@ICANN Fellowship Project · ML + AI Powered · Open Educational Tool</p>
   </div>
 </footer>
 
+<script src="ml_engine.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

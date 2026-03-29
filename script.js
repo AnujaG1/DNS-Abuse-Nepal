@@ -1,209 +1,68 @@
 /**
- * DNS Shield Nepal - DNS Abuse Detection Logic
- * =============================================
- * Phase 3: Detection Engine
- * 
- * This script performs client-side heuristic analysis of domains.
- * In a real production system, this would also query backend APIs
- * (Google Safe Browsing, PhishTank, SURBL, etc.)
+ * DNS SHIELD NEPAL — UI Controller + AI Integration (script.js)
+ * =============================================================
+ * Handles: UI rendering, gauge animation, tab switching,
+ *          Anthropic API calls for AI deep analysis, report form
  */
 
-// ===== DATABASE: Known Abuse Patterns (Simulated) =====
+// ═══════════════════════════════════════
+//  GAUGE DRAWING (Canvas-based)
+// ═══════════════════════════════════════
 
-// Phishing keywords commonly targeting Nepali users
-const PHISHING_KEYWORDS = [
-  'login', 'signin', 'secure', 'verify', 'update', 'account',
-  'banking', 'payment', 'wallet', 'password', 'credential',
-  'confirm', 'validation', 'alert', 'suspend', 'locked'
-];
+function drawGauge(canvas, score) {
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
 
-// Nepali brands/institutions commonly impersonated
-const NEPAL_BRANDS = [
-  'ncell', 'ntc', 'nepal-telecom', 'esewa', 'khalti', 'fonepay',
-  'nabilbank', 'nabil', 'nicasia', 'nic-asia', 'primebank',
-  'everestbank', 'himalayan-bank', 'hbl', 'citizen-bank',
-  'nepal-gov', 'nagarikta', 'passport-nepal', 'election-nepal',
-  'mofa-nepal', 'immigration-nepal', 'nepal-police',
-  'nea', 'wlink', 'worldlink', 'subisu', 'vianet'
-];
+  const cx = w / 2, cy = h - 10;
+  const r = 75;
+  const startAngle = Math.PI;
+  const endAngle = 2 * Math.PI;
 
-// Suspicious TLDs known for high DNS abuse rates
-const SUSPICIOUS_TLDS = [
-  '.tk', '.ml', '.ga', '.cf', '.gq',   // free TLDs heavily abused
-  '.xyz', '.pw', '.cc', '.top', '.click',
-  '.online', '.site', '.info', '.biz',
-  '.icu', '.sbs', '.cyou', '.cam'
-];
+  // Background arc
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startAngle, endAngle);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 14;
+  ctx.lineCap = 'round';
+  ctx.stroke();
 
-// TLDs considered safe
-const SAFE_TLDS = [
-  '.com', '.org', '.net', '.edu', '.gov',
-  '.com.np', '.org.np', '.edu.np', '.gov.np', '.net.np',  // Nepali official
-  '.io', '.co', '.app', '.dev'
-];
+  // Colored score arc
+  const grad = ctx.createLinearGradient(cx - r, cy, cx + r, cy);
+  grad.addColorStop(0, '#00e676');
+  grad.addColorStop(0.5, '#ffd32a');
+  grad.addColorStop(1, '#ff4757');
+  ctx.beginPath();
+  const scoreAngle = startAngle + (score / 100) * Math.PI;
+  ctx.arc(cx, cy, r, startAngle, scoreAngle);
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 14;
+  ctx.lineCap = 'round';
+  ctx.stroke();
 
-// Simulated known malware domains (in reality, fetched from blocklists)
-const KNOWN_MALWARE_DOMAINS = [
-  'free-download-nepal.tk', 'virus-nepal.ml', 'hack-tool.xyz',
-  'ncell-offer.xyz', 'nabilbank-login.tk', 'esewa-verify.ml',
-  'nepal-prize.cf', 'nicasia-secure.xyz', 'free-recharge.tk'
-];
-
-// Legitimate domains (whitelist)
-const KNOWN_SAFE = [
-  'google.com', 'facebook.com', 'youtube.com', 'github.com',
-  'nepal.gov.np', 'mof.gov.np', 'moha.gov.np', 'parliament.gov.np',
-  'nta.gov.np', 'ictfoundation.org.np',
-  'nabilbank.com', 'nicasiabank.com', 'esewa.com.np',
-  'khalti.com', 'ncell.axiata.com', 'ntc.net.np',
-  'anthropic.com', 'icann.org', 'cloudflare.com'
-];
-
-// ===== CORE DETECTION FUNCTIONS =====
-
-/**
- * Phase 3A: Check if domain matches known malware/phishing blocklists
- */
-function checkMalwareBlocklist(domain) {
-  const normalized = domain.toLowerCase();
-  if (KNOWN_SAFE.includes(normalized)) return { flagged: false, reason: 'Verified safe domain' };
-  if (KNOWN_MALWARE_DOMAINS.includes(normalized)) return { flagged: true, reason: 'Found in known malware/phishing database' };
-  return { flagged: false, reason: 'Not found in blocklists' };
+  // Needle
+  const needleAngle = Math.PI + (score / 100) * Math.PI;
+  const nx = cx + Math.cos(needleAngle) * (r - 18);
+  const ny = cy + Math.sin(needleAngle) * (r - 18);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(nx, ny);
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+  ctx.fillStyle = 'white';
+  ctx.fill();
 }
 
-/**
- * Phase 3B: Check for phishing keyword patterns
- */
-function checkPhishingKeywords(domain) {
-  const d = domain.toLowerCase();
-  const found = PHISHING_KEYWORDS.filter(kw => d.includes(kw));
-  if (found.length >= 2) return { flagged: true, reason: `Contains multiple phishing keywords: ${found.join(', ')}` };
-  if (found.length === 1) return { flagged: 'warn', reason: `Contains suspicious keyword: ${found[0]}` };
-  return { flagged: false, reason: 'No phishing keywords detected' };
-}
+// ═══════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════
 
-/**
- * Phase 3C: Check for suspicious TLD
- */
-function checkTLD(domain) {
-  const d = domain.toLowerCase();
-  for (const tld of SUSPICIOUS_TLDS) {
-    if (d.endsWith(tld)) return { flagged: true, reason: `Uses high-abuse TLD: ${tld}` };
-  }
-  for (const tld of SAFE_TLDS) {
-    if (d.endsWith(tld)) return { flagged: false, reason: `Reputable TLD: ${tld}` };
-  }
-  return { flagged: 'warn', reason: 'Unknown or uncommon TLD' };
-}
-
-/**
- * Phase 3D: Check for brand impersonation (Nepali context)
- */
-function checkBrandImpersonation(domain) {
-  const d = domain.toLowerCase().replace(/\./g, '-');
-  
-  // Exact match in safe list = legitimate
-  if (KNOWN_SAFE.includes(domain.toLowerCase())) return { flagged: false, reason: 'Verified brand domain' };
-
-  for (const brand of NEPAL_BRANDS) {
-    if (d.includes(brand)) {
-      // Check if it's the real brand domain
-      const isLegit = KNOWN_SAFE.some(safe => domain.toLowerCase() === safe);
-      if (!isLegit) {
-        return { flagged: true, reason: `May be impersonating Nepali brand/service: "${brand}"` };
-      }
-    }
-  }
-  return { flagged: false, reason: 'No brand impersonation detected' };
-}
-
-/**
- * Phase 3E: Check for typosquatting patterns
- */
-function checkTyposquatting(domain) {
-  const popularDomains = [
-    'google', 'facebook', 'youtube', 'gmail', 'microsoft',
-    'ncell', 'ntc', 'esewa', 'khalti', 'nabilbank', 'nicasia'
-  ];
-  const d = domain.toLowerCase();
-  const domainBase = d.split('.')[0];
-
-  for (const popular of popularDomains) {
-    if (domainBase !== popular && levenshtein(domainBase, popular) <= 2 && domainBase.length > 3) {
-      return { flagged: true, reason: `Possible typosquatting of "${popular}"` };
-    }
-    // Double letter or number substitution
-    if (domainBase.includes(popular.replace('o', '0')) || domainBase.includes(popular.replace('l', '1'))) {
-      return { flagged: true, reason: `Character substitution typosquatting of "${popular}"` };
-    }
-  }
-  return { flagged: false, reason: 'No typosquatting patterns detected' };
-}
-
-/**
- * Phase 3F: DNS Structure Analysis
- */
-function checkDNSStructure(domain) {
-  const d = domain.toLowerCase();
-  const parts = d.split('.');
-  const domainBase = parts[0];
-  const issues = [];
-
-  if (domainBase.length > 30) issues.push('Unusually long domain name');
-  if ((domainBase.match(/-/g) || []).length >= 3) issues.push('Multiple hyphens (common in abuse domains)');
-  if (/\d{4,}/.test(domainBase)) issues.push('Long numeric sequence in domain');
-  if (parts.length > 4) issues.push('Excessive subdomains');
-  if (/[^a-z0-9.-]/.test(d)) issues.push('Unusual characters in domain');
-
-  if (issues.length >= 2) return { flagged: true, reason: issues.join('; ') };
-  if (issues.length === 1) return { flagged: 'warn', reason: issues[0] };
-  return { flagged: false, reason: 'Normal DNS structure' };
-}
-
-/**
- * Levenshtein Distance — measures string similarity
- * Used for typosquatting detection
- */
-function levenshtein(a, b) {
-  const m = a.length, n = b.length;
-  const dp = Array.from({ length: m + 1 }, (_, i) => Array.from({ length: n + 1 }, (_, j) => j === 0 ? i : i === 0 ? j : 0));
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      if (a[i - 1] === b[j - 1]) dp[i][j] = dp[i - 1][j - 1];
-      else dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
-    }
-  }
-  return dp[m][n];
-}
-
-// ===== RISK SCORING =====
-
-function calculateRiskScore(results) {
-  let score = 0;
-  const weights = { phishing: 35, malware: 40, suspTLD: 20, brandImperson: 30, typosquat: 25, dnsStructure: 15 };
-
-  if (results.malware.flagged === true) score += weights.malware;
-  if (results.phishing.flagged === true) score += weights.phishing;
-  if (results.phishing.flagged === 'warn') score += weights.phishing * 0.5;
-  if (results.suspTLD.flagged === true) score += weights.suspTLD;
-  if (results.suspTLD.flagged === 'warn') score += weights.suspTLD * 0.4;
-  if (results.brandImperson.flagged === true) score += weights.brandImperson;
-  if (results.typosquat.flagged === true) score += weights.typosquat;
-  if (results.dnsStructure.flagged === true) score += weights.dnsStructure;
-  if (results.dnsStructure.flagged === 'warn') score += weights.dnsStructure * 0.5;
-
-  // Known safe domains get score override
-  if (KNOWN_SAFE.includes(currentDomain)) score = 0;
-
-  return Math.min(100, Math.round(score));
-}
-
-// ===== UI CONTROLLER =====
-
-let currentDomain = '';
-
-function setDomain(domain) {
-  document.getElementById('domainInput').value = domain;
+function setDomain(d) {
+  document.getElementById('domainInput').value = d;
   document.getElementById('domainInput').focus();
 }
 
@@ -211,218 +70,378 @@ function clearInput() {
   document.getElementById('domainInput').value = '';
   document.getElementById('resultsPanel').classList.add('hidden');
   document.getElementById('loadingPanel').classList.add('hidden');
-  document.getElementById('domainInput').focus();
 }
 
-function validateDomain(domain) {
-  const cleaned = domain.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\//,'');
-  const pattern = /^[a-zA-Z0-9][a-zA-Z0-9-_.]{1,253}[a-zA-Z0-9]$/;
-  return { valid: pattern.test(cleaned) || cleaned.includes('.'), cleaned };
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
 }
 
-async function checkDomain() {
-  const input = document.getElementById('domainInput').value.trim();
-  if (!input) { alert('Please enter a domain name to check.'); return; }
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-  const { valid, cleaned } = validateDomain(input);
-  currentDomain = cleaned;
-
-  if (!cleaned.includes('.')) {
-    alert('Please enter a valid domain (e.g. example.com)');
-    return;
+async function animateProgress(fillId, duration) {
+  const el = document.getElementById(fillId);
+  const steps = 40;
+  for (let i = 0; i <= steps; i++) {
+    el.style.width = (i / steps * 100) + '%';
+    await delay(duration / steps);
   }
+}
 
-  // Hide results, show loading
+// ═══════════════════════════════════════
+//  LOADING ANIMATION
+// ═══════════════════════════════════════
+
+async function showLoadingPhases(aiDelay = 1800) {
+  document.getElementById('loadingPanel').classList.remove('hidden');
+  const phases = ['lp1','lp2','lp3'];
+
+  // Phase 1: Feature Extraction
+  document.getElementById('lp1').classList.add('active');
+  await animateProgress('lpf1', 600);
+  document.getElementById('lp1').classList.add('done');
+
+  // Phase 2: ML Scoring
+  document.getElementById('lp2').classList.add('active');
+  await animateProgress('lpf2', 500);
+  document.getElementById('lp2').classList.add('done');
+
+  // Phase 3: AI Analysis (longer)
+  document.getElementById('lp3').classList.add('active');
+  await animateProgress('lpf3', aiDelay);
+}
+
+// ═══════════════════════════════════════
+//  ML ANALYSIS MAIN FLOW
+// ═══════════════════════════════════════
+
+let lastAnalysis = null;
+
+async function runMLAnalysis() {
+  const input = document.getElementById('domainInput').value.trim();
+  if (!input) { alert('Please enter a domain name.'); return; }
+
+  const domain = input.replace(/^https?:\/\//,'').replace(/\/.*/,'').replace(/:\d+$/,'').trim();
+  if (!domain.includes('.')) { alert('Please enter a valid domain with a TLD (e.g. example.com)'); return; }
+
+  // Reset UI
   document.getElementById('resultsPanel').classList.add('hidden');
   document.getElementById('loadingPanel').classList.remove('hidden');
+  document.getElementById('btnText').textContent = 'Analyzing...';
+  document.getElementById('analyzeBtn').disabled = true;
 
-  // Simulate async scanning with step-by-step animation
-  await simulateScan();
+  // Reset phase state
+  ['lp1','lp2','lp3'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+    document.getElementById(id.replace('lp','lpf')).style.width = '0%';
+  });
 
-  // Run all checks
-  const results = {
-    phishing: checkPhishingKeywords(cleaned),
-    malware: checkMalwareBlocklist(cleaned),
-    suspTLD: checkTLD(cleaned),
-    brandImperson: checkBrandImpersonation(cleaned),
-    typosquat: checkTyposquatting(cleaned),
-    dnsStructure: checkDNSStructure(cleaned)
-  };
+  // Run ML synchronously (fast) while showing animation
+  const analysisPromise = Promise.resolve(analyzeDomain(domain));
 
-  const riskScore = calculateRiskScore(results);
-  const isSafe = KNOWN_SAFE.includes(cleaned);
+  // Show loading phases in parallel
+  await showLoadingPhases(1800);
+  const analysis = await analysisPromise;
+  lastAnalysis = analysis;
 
-  // Hide loading, show results
   document.getElementById('loadingPanel').classList.add('hidden');
+  document.getElementById('btnText').textContent = 'Run ML Analysis';
+  document.getElementById('analyzeBtn').disabled = false;
+
+  renderResults(domain, analysis);
+
+  // Scroll to results
+  document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ═══════════════════════════════════════
+//  RENDER RESULTS
+// ═══════════════════════════════════════
+
+function renderResults(domain, analysis) {
+  const { features, score, contributions, modules, riskLevel } = analysis;
+
   document.getElementById('resultsPanel').classList.remove('hidden');
 
-  // Render results
-  renderResults(cleaned, results, riskScore, isSafe);
-}
+  // Gauge
+  const canvas = document.getElementById('gaugeCanvas');
+  let animScore = 0;
+  const gaugeInterval = setInterval(() => {
+    animScore = Math.min(score, animScore + Math.ceil(score / 30));
+    drawGauge(canvas, animScore);
+    document.getElementById('gaugeScoreLabel').textContent = animScore;
+    if (animScore >= score) clearInterval(gaugeInterval);
+  }, 30);
 
-async function simulateScan() {
-  const steps = ['ls1', 'ls2', 'ls3', 'ls4', 'ls5'];
-  const msgs = [
-    'Checking phishing databases...',
-    'Analyzing TLD reputation...',
-    'Scanning for brand impersonation...',
-    'Checking DNS structure...',
-    'Generating risk report...'
-  ];
-
-  // Reset steps
-  steps.forEach((id, i) => {
-    const el = document.getElementById(id);
-    el.className = 'lstep';
-    el.textContent = `⬜ ${msgs[i]}`;
-  });
-
-  for (let i = 0; i < steps.length; i++) {
-    await delay(350);
-    const el = document.getElementById(steps[i]);
-    el.className = 'lstep active';
-    el.textContent = `🔄 ${msgs[i]}`;
-    document.getElementById('loaderText').textContent = msgs[i];
-    await delay(500);
-    el.className = 'lstep done';
-    el.textContent = `✅ ${msgs[i]}`;
-  }
-  await delay(200);
-}
-
-function delay(ms) { return new Promise(res => setTimeout(res, ms)); }
-
-function renderResults(domain, results, score, isSafe) {
-  // Risk level
-  let riskLevel, riskClass;
-  if (isSafe || score === 0) { riskLevel = '✅ SAFE'; riskClass = 'safe'; }
-  else if (score >= 40) { riskLevel = '🚨 HIGH RISK'; riskClass = 'danger'; }
-  else if (score >= 20) { riskLevel = '⚠️ SUSPICIOUS'; riskClass = 'warning'; }
-  else { riskLevel = '✅ LIKELY SAFE'; riskClass = 'safe'; }
-
+  // Risk badge
   const badge = document.getElementById('riskBadge');
-  badge.textContent = riskLevel;
-  badge.className = `risk-badge ${riskClass}`;
+  const badgeMap = {
+    danger:  ['🚨 HIGH RISK',    'danger'],
+    warning: ['⚠️ SUSPICIOUS',   'warning'],
+    safe:    ['✅ SAFE',         'safe'],
+  };
+  const [label, cls] = badgeMap[riskLevel] || ['UNKNOWN',''];
+  badge.textContent = label;
+  badge.className = 'risk-badge ' + cls;
 
   document.getElementById('domainDisplay').textContent = domain;
-  document.getElementById('riskScore').textContent = `Risk Score: ${score}/100`;
 
-  // Individual check cards
-  const checkMap = [
-    { card: 'checkPhishing', status: 'statusPhishing', result: results.phishing },
-    { card: 'checkMalware', status: 'statusMalware', result: results.malware },
-    { card: 'checkSuspTLD', status: 'statusSuspTLD', result: results.suspTLD },
-    { card: 'checkBrandImperson', status: 'statusBrandImperson', result: results.brandImperson },
-    { card: 'checkTyposquat', status: 'statusTyposquat', result: results.typosquat },
-    { card: 'checkBogusDNS', status: 'statusBogusDNS', result: results.dnsStructure },
-  ];
+  // Summary line
+  const flaggedModules = Object.values(modules).filter(m => m.flag === 'fail').length;
+  const warnModules = Object.values(modules).filter(m => m.flag === 'warn').length;
+  let summaryLine = features._isWhitelisted
+    ? 'Verified safe domain — in trusted whitelist'
+    : `ML Risk Score: ${score}/100 · ${flaggedModules} flagged · ${warnModules} warnings · ${Object.keys(features).filter(k=>!k.startsWith('_')).length} features analyzed`;
+  document.getElementById('threatSummaryLine').textContent = summaryLine;
 
-  checkMap.forEach(({ card, status, result }) => {
-    const cardEl = document.getElementById(card);
-    const statusEl = document.getElementById(status);
+  // Top flags
+  const flagsEl = document.getElementById('topFlags');
+  const topFlags = [];
+  if (features.tldAbuseScore > 0.6) topFlags.push(`${features._tld} TLD (${Math.round(features.tldAbuseScore*100)}% abuse rate)`);
+  if (features._matchedBrands.length > 0) topFlags.push(`Brand: ${features._matchedBrands[0]}`);
+  if (features._foundKeywords.length > 0) topFlags.push(`Keywords: ${features._foundKeywords.slice(0,3).join(', ')}`);
+  if (features.typosquatScore > 0.5) topFlags.push(`Typosquat of "${features._closestBrand}"`);
+  flagsEl.innerHTML = topFlags.map(f => `<span class="flag-pill">${f}</span>`).join('');
 
-    if (isSafe) {
-      cardEl.className = 'check-card pass';
-      statusEl.textContent = '✅ PASS';
-      statusEl.className = 'check-status status-pass';
-    } else if (result.flagged === true) {
-      cardEl.className = 'check-card fail';
-      statusEl.textContent = '🚨 FLAGGED';
-      statusEl.className = 'check-status status-fail';
-    } else if (result.flagged === 'warn') {
-      cardEl.className = 'check-card warn';
-      statusEl.textContent = '⚠️ WARN';
-      statusEl.className = 'check-status status-warn';
-    } else {
-      cardEl.className = 'check-card pass';
-      statusEl.textContent = '✅ PASS';
-      statusEl.className = 'check-status status-pass';
-    }
-  });
+  // Render tabs
+  renderFeaturesTab(features, contributions);
+  renderDetectionsTab(modules, features);
+  renderAITab(domain, features, modules, score);
 
-  // Summary box
-  const summaryEl = document.getElementById('summaryBox');
-  if (isSafe || score === 0) {
-    summaryEl.className = 'summary-box safe';
-    summaryEl.innerHTML = `<strong>✅ This domain appears safe.</strong> <em>${domain}</em> passed all DNS abuse checks and is not associated with any known phishing, malware, or domain abuse activity.`;
-  } else if (score >= 40) {
-    summaryEl.className = 'summary-box danger';
-    const flaggedChecks = Object.values(results).filter(r => r.flagged === true).map(r => r.reason);
-    summaryEl.innerHTML = `<strong>🚨 WARNING — This domain shows HIGH RISK indicators.</strong> We strongly advise against visiting or entering any personal information on this domain. Issues found: <br><br>• ${flaggedChecks.join('<br>• ')}`;
-  } else if (score >= 20) {
-    summaryEl.className = 'summary-box warning';
-    summaryEl.innerHTML = `<strong>⚠️ This domain shows some suspicious patterns.</strong> Exercise caution. Double-check the URL carefully before entering any login or payment information.`;
-  } else {
-    summaryEl.className = 'summary-box safe';
-    summaryEl.innerHTML = `<strong>✅ This domain appears likely safe</strong> with no major red flags detected. Always verify URLs carefully before sharing sensitive information online.`;
+  // Default to features tab
+  switchTab('features', document.querySelector('[data-tab="features"]'));
+}
+
+// ═══════════════════════════════════════
+//  TAB: ML FEATURES
+// ═══════════════════════════════════════
+
+function renderFeaturesTab(features, contributions) {
+  const grid = document.getElementById('featuresGrid');
+  grid.innerHTML = '';
+
+  for (const [fname, meta] of Object.entries(FEATURE_DISPLAY)) {
+    const val = features[fname];
+    if (val === undefined) continue;
+    const isGood = meta.good(val);
+    const contrib = contributions[fname] || 0;
+    const card = document.createElement('div');
+    card.className = `feat-card ${isGood ? 'feat-good' : (contrib > 5 ? 'feat-bad' : 'feat-warn')}`;
+    card.innerHTML = `
+      <div class="feat-icon">${meta.icon}</div>
+      <div class="feat-info">
+        <div class="feat-label">${meta.label}</div>
+        <div class="feat-value">${meta.format(val)}</div>
+        <div class="feat-weight">ML weight: ${FEATURE_WEIGHTS[fname]?.weight ?? '—'} · Contrib: +${contrib.toFixed(1)}</div>
+      </div>
+      <div class="feat-status">${isGood ? '✅' : (contrib > 5 ? '🚨' : '⚠️')}</div>
+    `;
+    grid.appendChild(card);
   }
 
-  // ICANN note
+  // Weight chart
+  renderWeightChart(contributions);
+}
+
+function renderWeightChart(contributions) {
+  const chart = document.getElementById('weightChart');
+  // Top 8 contributing features
+  const sorted = Object.entries(contributions)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8);
+  const max = sorted[0]?.[1] || 1;
+
+  chart.innerHTML = sorted.map(([fname, val]) => {
+    const pct = Math.round((val / max) * 100);
+    const display = FEATURE_DISPLAY[fname];
+    return `
+      <div class="wc-row">
+        <div class="wc-label">${display?.icon ?? ''} ${display?.label ?? fname}</div>
+        <div class="wc-bar-wrap">
+          <div class="wc-bar" style="width:${pct}%"></div>
+        </div>
+        <div class="wc-val">+${val.toFixed(1)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+//  TAB: DETECTIONS
+// ═══════════════════════════════════════
+
+function renderDetectionsTab(modules, features) {
+  const list = document.getElementById('detectionsList');
+  const moduleInfo = {
+    phishing:   { title: 'Phishing Detection',          desc: 'Keyword-weighted scoring against phishing vocabulary' },
+    malwareDGA: { title: 'Malware / DGA Detection',     desc: 'Entropy + digit ratio + consonant cluster analysis' },
+    tld:        { title: 'TLD Abuse Score',              desc: 'TLD abuse probability from Spamhaus/SURBL databases' },
+    brand:      { title: 'Nepali Brand Impersonation',  desc: 'Checks against 30+ Nepali brands and institutions' },
+    typosquat:  { title: 'Typosquatting (Levenshtein)', desc: 'Edit-distance comparison to popular legitimate domains' },
+    structural: { title: 'DNS Structural Analysis',     desc: 'Length, hyphens, subdomains, special characters' },
+  };
+
+  list.innerHTML = Object.entries(modules).map(([key, result]) => {
+    const info = moduleInfo[key];
+    const flagClass = result.flag === 'fail' ? 'det-fail' : result.flag === 'warn' ? 'det-warn' : 'det-pass';
+    return `
+      <div class="det-card ${flagClass}">
+        <div class="det-header">
+          <div class="det-title">${result.label}</div>
+          <div class="det-badge ${result.flag}">${result.flag.toUpperCase()}</div>
+        </div>
+        <div class="det-method">${info.desc}</div>
+        <div class="det-detail">${result.detail}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+//  TAB: AI ANALYSIS via Anthropic API
+// ═══════════════════════════════════════
+
+async function renderAITab(domain, features, modules, score) {
+  document.getElementById('aiLoading').classList.remove('hidden');
+  document.getElementById('aiContent').classList.add('hidden');
+
   document.getElementById('icannNote').innerHTML = `
-    🌐 <strong>About this check:</strong> This tool uses heuristic analysis aligned with ICANN's DNS Abuse definitions — 
-    including phishing, malware, spam, and domain impersonation. For definitive verification, report suspicious domains 
-    to <a href="https://www.icann.org/compliance/complaint" target="_blank" style="color:var(--accent)">ICANN Compliance</a> 
-    or <a href="https://www.phishtank.com" target="_blank" style="color:var(--accent)">PhishTank</a>.
+    🌐 <strong>ICANN Alignment:</strong> This analysis is aligned with ICANN's five DNS abuse categories 
+    (phishing, malware, spam, botnets, child safety abuse) as defined in ICANN's DNS Security Threat Mitigation Program.
+    Suspicious domains can be reported to 
+    <a href="https://www.icann.org/compliance/complaint" target="_blank" style="color:var(--accent)">ICANN Compliance →</a>
   `;
 
-  // Report button (only show for risky domains)
-  const reportBox = document.getElementById('reportBtnBox');
+  // Build the prompt with all ML features
+  const flaggedList = Object.entries(modules)
+    .filter(([,r]) => r.flag !== 'pass')
+    .map(([k,r]) => `• ${r.label}: ${r.detail}`)
+    .join('\n');
+
+  const prompt = `You are a DNS security expert and ICANN policy specialist. Analyze this domain and ML results for DNS abuse.
+
+DOMAIN: ${domain}
+ML RISK SCORE: ${score}/100
+RISK LEVEL: ${score >= 45 ? 'HIGH RISK' : score >= 20 ? 'SUSPICIOUS' : 'LIKELY SAFE'}
+
+KEY ML FEATURES EXTRACTED:
+- Shannon Entropy: ${features.shannonEntropy} bits ${features.shannonEntropy > 3.5 ? '(HIGH - possible DGA)' : '(normal)'}
+- Domain Length: ${features.domainLength} chars
+- TLD: ${features._tld} (abuse score: ${Math.round(features.tldAbuseScore*100)}%)
+- Phishing keywords found: ${features._foundKeywords.length > 0 ? features._foundKeywords.join(', ') : 'none'}
+- Nepali brands matched: ${features._matchedBrands.length > 0 ? features._matchedBrands.join(', ') : 'none'}
+- Typosquat: distance ${features._minEditDist} from "${features._closestBrand}"
+- Digit ratio: ${(features.digitRatio*100).toFixed(1)}%
+- Hyphen count: ${features.hyphenCount}
+- Vowel deviation from natural: ${(features.vowelRatio*100).toFixed(1)}%
+
+MODULE CLASSIFICATION RESULTS:
+${flaggedList || '• All modules passed — no flags raised'}
+
+CONTEXT: Nepal has 15M+ internet users. Common targets include eSewa, Khalti, Nabil Bank, NIC Asia, Ncell, and .gov.np sites.
+
+Provide a concise threat intelligence report with:
+1. **Threat Assessment** (2-3 sentences about what this domain likely is)
+2. **Nepal-Specific Risk** (how this could target Nepali users specifically)
+3. **ICANN Abuse Category** (which of the 5 ICANN DNS abuse types this falls under, if any)
+4. **User Action** (what should a Nepali internet user do if they encounter this domain?)
+5. **Confidence Level** (how confident are you in this assessment, and why?)
+
+Keep the response focused, practical, and in plain English. No markdown headers - use the section numbers only.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || 'Analysis unavailable.';
+
+    document.getElementById('aiLoading').classList.add('hidden');
+    const aiContent = document.getElementById('aiContent');
+    aiContent.classList.remove('hidden');
+
+    // Format the numbered sections nicely
+    const formatted = text
+      .replace(/(\d+\.\s?\*\*[^*]+\*\*)/g, match => `<div class="ai-section-header">${match.replace(/\*\*/g,'')}</div>`)
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br/>');
+
+    aiContent.innerHTML = `<div class="ai-report"><p>${formatted}</p></div>`;
+
+  } catch (err) {
+    document.getElementById('aiLoading').classList.add('hidden');
+    const aiContent = document.getElementById('aiContent');
+    aiContent.classList.remove('hidden');
+    aiContent.innerHTML = `
+      <div class="ai-error">
+        <strong>⚠️ AI Analysis Unavailable</strong>
+        <p>The Claude AI API requires an API key configured server-side. In a production deployment, this would connect to the Anthropic API to provide deep contextual threat intelligence. The ML scoring above is fully functional.</p>
+        <p style="font-size:0.82rem;color:var(--text3);margin-top:0.5rem">To enable: set up a simple Express.js backend proxy with your Anthropic API key and update the fetch URL in script.js.</p>
+      </div>
+    `;
+  }
+
+  // Show report button for risky domains
   if (score >= 20) {
-    reportBox.innerHTML = `<button onclick="prefillReport('${domain}')">🚨 Report this Domain to Authorities</button>`;
-  } else {
-    reportBox.innerHTML = '';
+    document.getElementById('reportBtnBox').innerHTML = `
+      <button class="report-flag-btn" onclick="prefillAndReport('${domain}')">
+        🚨 Report "${domain}" to ICANN / Nepal Cyber Bureau
+      </button>
+    `;
   }
 }
 
-function prefillReport(domain) {
+function prefillAndReport(domain) {
   document.getElementById('reportDomain').value = domain;
   document.querySelector('#report').scrollIntoView({ behavior: 'smooth' });
 }
 
+// ═══════════════════════════════════════
+//  REPORT FORM
+// ═══════════════════════════════════════
+
 function submitReport() {
   const domain = document.getElementById('reportDomain').value.trim();
   const abuseType = document.getElementById('abuseType').value;
-
   if (!domain) { alert('Please enter a domain to report.'); return; }
   if (!abuseType) { alert('Please select the type of abuse.'); return; }
 
-  // Simulate report submission
-  setTimeout(() => {
-    document.getElementById('reportSuccess').classList.remove('hidden');
-    // Reset form
-    document.getElementById('reportDomain').value = '';
-    document.getElementById('abuseType').value = '';
-    document.getElementById('reportDesc').value = '';
-    document.getElementById('reportEmail').value = '';
+  // Log report (in production → POST to backend → ICANN/NTA API)
+  console.log('DNS Abuse Report:', {
+    domain, abuseType,
+    description: document.getElementById('reportDesc').value,
+    timestamp: new Date().toISOString(),
+  });
 
-    // Log to console (in production, this would POST to a backend)
-    console.log('DNS Abuse Report Submitted:', {
-      domain,
-      abuseType,
-      description: document.getElementById('reportDesc').value,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent
-    });
-
-    setTimeout(() => document.getElementById('reportSuccess').classList.add('hidden'), 6000);
-  }, 500);
+  document.getElementById('reportSuccess').classList.remove('hidden');
+  ['reportDomain','reportDesc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('abuseType').value = '';
+  setTimeout(() => document.getElementById('reportSuccess').classList.add('hidden'), 6000);
 }
 
-// Smooth scroll for nav links
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    const target = document.querySelector(a.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth' });
-  });
-});
+// ═══════════════════════════════════════
+//  KEYBOARD SHORTCUT
+// ═══════════════════════════════════════
 
-// Allow Enter key in domain input
 document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('domainInput');
-  if (input) {
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') checkDomain();
+  document.getElementById('domainInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') runMLAnalysis();
+  });
+
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
     });
-  }
+  });
 });

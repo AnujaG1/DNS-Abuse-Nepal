@@ -1,398 +1,644 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>DNS Shield Nepal — ML-Powered DNS Abuse Detection</title>
-  <link rel="stylesheet" href="style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DNS Shield Nepal — ML DNS Abuse Detector</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0f1e;--bg2:#0d1526;--bg3:#111d33;--card:#101928;
+  --border:#1c2f4a;--border2:#243d5c;
+  --accent:#3b82f6;--accent2:#2563eb;
+  --green:#22c55e;--green-bg:rgba(34,197,94,.09);--green-b:rgba(34,197,94,.3);
+  --red:#ef4444;--red-bg:rgba(239,68,68,.09);--red-b:rgba(239,68,68,.3);
+  --yellow:#eab308;--yellow-bg:rgba(234,179,8,.09);--yellow-b:rgba(234,179,8,.3);
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --mono:'Space Mono',monospace;--sans:'Inter',sans-serif;
+  --r:10px;--r-sm:6px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+code{font-family:var(--mono);font-size:.82em;background:var(--bg3);padding:.1em .4em;border-radius:4px;color:#7dd3fc}
+a{color:var(--accent)}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:99;display:flex;align-items:center;gap:1.5rem;padding:.85rem 2rem;background:rgba(10,15,30,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.nav-brand{font-family:var(--mono);font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+.nav-brand span{color:var(--accent)}
+.nav-links{display:flex;gap:1.5rem;list-style:none;margin-left:auto}
+.nav-links a{color:var(--text2);font-size:.85rem;font-weight:500;text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-acc{padding:.25rem .75rem;border-radius:20px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--green);font-family:var(--mono);font-size:.72rem;font-weight:700}
+
+/* HERO */
+.hero{padding:8rem 2rem 4rem;max-width:860px;margin:0 auto;text-align:center}
+.eyebrow{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem 1rem;border-radius:20px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);color:var(--accent);font-size:.8rem;font-weight:600;margin-bottom:1.5rem}
+.hero h1{font-size:clamp(2rem,5vw,3rem);font-weight:800;line-height:1.15;letter-spacing:-.5px;margin-bottom:1rem}
+.hl{color:var(--accent)}
+.hero p{color:var(--text2);max-width:560px;margin:0 auto 2rem;font-size:.95rem}
+.stats{display:flex;justify-content:center;gap:2.5rem;flex-wrap:wrap;margin-top:1.5rem}
+.stat{text-align:center}
+.stat-n{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--accent)}
+.stat-l{font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+
+/* CHECKER */
+.checker{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:3rem 2rem}
+.checker-wrap{max-width:820px;margin:0 auto}
+.box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.75rem}
+.input-row{display:flex;gap:.75rem;margin-bottom:.75rem}
+.inp-wrap{flex:1;display:flex;align-items:center;gap:.75rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:0 1rem;transition:border .2s}
+.inp-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.inp-wrap input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:.88rem;padding:.8rem 0}
+.inp-wrap input::placeholder{color:var(--text3)}
+.btn-x{background:none;border:none;color:var(--text3);cursor:pointer;font-size:.85rem;padding:.3rem}
+.btn-x:hover{color:var(--red)}
+.btn-go{padding:.8rem 1.5rem;background:var(--accent);color:#fff;border:none;border-radius:var(--r-sm);font-weight:700;font-size:.88rem;cursor:pointer;white-space:nowrap;font-family:var(--sans);transition:all .2s}
+.btn-go:hover:not(:disabled){background:var(--accent2)}
+.btn-go:disabled{opacity:.5;cursor:not-allowed}
+.examples{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+.ex-l{color:var(--text3);font-size:.78rem}
+.ex{padding:.22rem .6rem;border-radius:20px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-family:var(--mono);font-size:.73rem;cursor:pointer;transition:all .2s}
+.ex:hover{border-color:var(--accent);color:var(--accent)}
+
+/* LOADING */
+.loading{margin-top:1.2rem;display:none}
+.loading.show{display:block}
+.ls{display:flex;align-items:center;gap:.75rem;padding:.55rem .9rem;border-radius:var(--r-sm);background:var(--bg);border:1px solid var(--border);margin-bottom:.4rem;opacity:.3;transition:all .3s}
+.ls.active{opacity:1;border-color:var(--accent)}
+.ls.done{opacity:1;border-color:var(--green)}
+.ls-dot{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .3s}
+.ls.active .ls-dot{background:var(--accent);animation:blink .8s ease infinite}
+.ls.done .ls-dot{background:var(--green)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.ls-t{font-size:.8rem;color:var(--text2);font-family:var(--mono)}
+.ls.done .ls-t{color:var(--green)}
+
+/* RESULTS */
+.results{margin-top:1.2rem;display:none}
+.results.show{display:block;animation:up .3s ease}
+@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* Risk header */
+.rh{display:flex;align-items:center;gap:1.5rem;padding:1.25rem 1.5rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);margin-bottom:.9rem;flex-wrap:wrap}
+.gauge-wrap{position:relative;flex-shrink:0;text-align:center}
+.gauge-wrap canvas{display:block}
+.g-score{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--text)}
+.g-label{font-size:.62rem;color:var(--text3);font-family:var(--mono);letter-spacing:.5px}
+.rm{flex:1;min-width:200px}
+.badge{display:inline-block;padding:.28rem .85rem;border-radius:20px;font-family:var(--mono);font-size:.78rem;font-weight:700;margin-bottom:.4rem}
+.b-safe{background:var(--green-bg);border:1px solid var(--green-b);color:var(--green)}
+.b-danger{background:var(--red-bg);border:1px solid var(--red-b);color:var(--red)}
+.b-warning{background:var(--yellow-bg);border:1px solid var(--yellow-b);color:var(--yellow)}
+.r-domain{font-family:var(--mono);font-size:1rem;font-weight:700;margin-bottom:.2rem;word-break:break-all}
+.r-sub{font-size:.78rem;color:var(--text2);margin-bottom:.45rem}
+.proba-row{display:flex;gap:.4rem;flex-wrap:wrap}
+.proba-pill{padding:.16rem .55rem;border-radius:20px;font-size:.7rem;font-family:var(--mono)}
+.pp-green{background:var(--green-bg);border:1px solid var(--green-b);color:var(--green)}
+.pp-red{background:var(--red-bg);border:1px solid var(--red-b);color:var(--red)}
+.pp-yellow{background:var(--yellow-bg);border:1px solid var(--yellow-b);color:var(--yellow)}
+.pp-gray{background:var(--bg3);border:1px solid var(--border);color:var(--text2)}
+
+/* Tabs */
+.tabs{display:flex;gap:.4rem;margin-bottom:.8rem;flex-wrap:wrap}
+.tab{padding:.45rem .95rem;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);color:var(--text2);font-size:.8rem;cursor:pointer;transition:all .2s;font-family:var(--sans)}
+.tab:hover{border-color:var(--accent);color:var(--accent)}
+.tab.on{background:rgba(59,130,246,.1);border-color:var(--accent);color:var(--accent);font-weight:600}
+.panel{display:none}.panel.on{display:block;animation:up .2s ease}
+
+/* Features panel */
+.fn{font-size:.76rem;color:var(--text3);margin-bottom:.8rem;padding:.55rem .85rem;background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.15);border-radius:var(--r-sm)}
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.45rem;margin-bottom:1.2rem}
+.fc{display:flex;align-items:center;gap:.65rem;padding:.6rem .85rem;border-radius:var(--r-sm);border:1px solid}
+.fc-ok{background:var(--green-bg);border-color:var(--green-b)}
+.fc-bad{background:var(--red-bg);border-color:var(--red-b)}
+.fc-warn{background:var(--yellow-bg);border-color:var(--yellow-b)}
+.fi{width:24px;text-align:center;font-size:.9rem;flex-shrink:0}
+.fb{flex:1;min-width:0}
+.fn2{font-size:.72rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fv{font-family:var(--mono);font-size:.85rem;font-weight:700;color:var(--text)}
+.fw{font-size:.65rem;color:var(--text3)}
+.ff{font-size:.8rem;flex-shrink:0}
+
+/* Bar chart */
+.ct{font-size:.72rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem}
+.br{display:flex;align-items:center;gap:.65rem;margin-bottom:.35rem}
+.bl{font-size:.73rem;color:var(--text2);min-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bt{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.bf{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),#6366f1);transition:width .8s ease}
+.bn{font-family:var(--mono);font-size:.7rem;color:var(--accent);min-width:32px;text-align:right}
+
+/* Modules panel */
+.mods{display:flex;flex-direction:column;gap:.55rem}
+.mod{padding:.95rem 1.1rem;border-radius:var(--r-sm);border:1px solid}
+.m-ok{background:var(--green-bg);border-color:var(--green-b)}
+.m-bad{background:var(--red-bg);border-color:var(--red-b)}
+.m-warn{background:var(--yellow-bg);border-color:var(--yellow-b)}
+.mt{display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem;gap:.5rem}
+.mn{font-size:.85rem;font-weight:700}
+.mb{padding:.14rem .5rem;border-radius:20px;font-size:.68rem;font-weight:700;font-family:var(--mono)}
+.mb-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-b)}
+.mb-bad{background:var(--red-bg);color:var(--red);border:1px solid var(--red-b)}
+.mb-warn{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-b)}
+.mm{font-size:.7rem;color:var(--text3);font-style:italic;margin-bottom:.15rem}
+.md{font-size:.78rem;color:var(--text2)}
+
+/* Probability panel */
+.prob-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.75rem;margin-bottom:1rem}
+.pc{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:1rem;text-align:center}
+.pc-label{font-size:.75rem;color:var(--text2);margin-bottom:.25rem;font-weight:600}
+.pc-val{font-family:var(--mono);font-size:1.6rem;font-weight:700;margin-bottom:.3rem}
+.pc-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.pc-fill{height:100%;border-radius:3px;transition:width .8s ease}
+
+/* About section */
+.about{padding:4rem 2rem;border-top:1px solid var(--border)}
+.about-wrap{max-width:860px;margin:0 auto}
+.sec-tag{display:inline-block;font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase;padding:.22rem .65rem;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:4px;margin-bottom:.7rem}
+.sec-h{font-size:clamp(1.4rem,3vw,1.9rem);font-weight:800;margin-bottom:.5rem;letter-spacing:-.3px}
+.sec-sub{color:var(--text2);font-size:.9rem;max-width:540px;margin-bottom:1.8rem}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.9rem;margin-bottom:1.5rem}
+.ic{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.2rem;transition:border-color .2s}
+.ic:hover{border-color:var(--accent)}
+.ic-icon{font-size:1.5rem;margin-bottom:.5rem}
+.ic h4{font-size:.85rem;font-weight:700;margin-bottom:.35rem}
+.ic p{font-size:.76rem;color:var(--text2);line-height:1.55;margin-bottom:.4rem}
+.ic code{display:block;margin-top:.3rem}
+
+/* Training steps */
+.train-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem;margin-bottom:1.5rem}
+.train-box h3{font-size:.95rem;font-weight:700;margin-bottom:1rem}
+.ts{display:flex;gap:.85rem;margin-bottom:.85rem;align-items:flex-start}
+.tsn{width:24px;height:24px;border-radius:50%;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:var(--accent);font-size:.7rem;font-weight:700;font-family:var(--mono);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem}
+.tsb h4{font-size:.82rem;font-weight:700;margin-bottom:.2rem}
+.tsb p{font-size:.76rem;color:var(--text2);line-height:1.5}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:.78rem;margin-top:.9rem}
+.tbl th{text-align:left;padding:.45rem .7rem;color:var(--text3);font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);font-weight:600}
+.tbl td{padding:.4rem .7rem;border-bottom:1px solid rgba(28,47,74,.5);color:var(--text2)}
+.tbl td:first-child{font-family:var(--mono);color:var(--text);font-size:.74rem}
+.tbl td.imp{font-family:var(--mono);color:var(--accent);text-align:right;font-size:.74rem}
+.tbl tr:last-child td{border-bottom:none}
+
+/* Report */
+.report{padding:3.5rem 2rem;border-top:1px solid var(--border);background:var(--bg2)}
+.report-wrap{max-width:820px;margin:0 auto}
+.rep-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:1.5rem}
+.rc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem}
+.rc h3{font-size:.9rem;font-weight:700;margin-bottom:1.1rem}
+.fg2{margin-bottom:.9rem}
+.fg2 label{display:block;font-size:.74rem;color:var(--text2);font-weight:600;margin-bottom:.3rem}
+.fg2 input,.fg2 select,.fg2 textarea{width:100%;padding:.6rem .85rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:.83rem;font-family:var(--sans);outline:none;transition:border .2s}
+.fg2 input:focus,.fg2 select:focus,.fg2 textarea:focus{border-color:var(--accent)}
+.fg2 textarea{resize:vertical}
+.btn-rep{width:100%;padding:.75rem;border:none;border-radius:var(--r-sm);background:var(--red);color:#fff;font-weight:700;font-size:.85rem;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.btn-rep:hover{background:#dc2626}
+.rep-ok{margin-top:.65rem;padding:.65rem;border-radius:var(--r-sm);background:var(--green-bg);border:1px solid var(--green-b);color:var(--green);font-size:.8rem;display:none}
+.rlink{display:flex;gap:.65rem;padding:.8rem;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);margin-bottom:.5rem;align-items:flex-start}
+.rlink-i{font-size:1rem;flex-shrink:0;margin-top:.1rem}
+.rlink strong{display:block;font-size:.8rem;margin-bottom:.1rem}
+.rlink p{font-size:.72rem;color:var(--text3);margin-bottom:.15rem}
+.rlink a{font-size:.74rem}
+
+footer{padding:1.5rem 2rem;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:.77rem}
+footer a{color:var(--accent)}
+
+@media(max-width:700px){
+  nav .nav-links{display:none}
+  .hero{padding:6rem 1.2rem 2.5rem}
+  .input-row{flex-direction:column}
+  .rh{flex-direction:column}
+  .rep-grid{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
 
-<nav class="navbar">
-  <div class="nav-logo">
-    <span class="logo-icon">🛡</span>
-    <span class="logo-text">DNS Shield <span class="logo-np">Nepal</span></span>
-  </div>
+<nav>
+  <div class="nav-brand">🛡 DNS Shield <span>Nepal</span></div>
   <ul class="nav-links">
-    <li><a href="#home">Home</a></li>
-    <li><a href="#checker">ML Checker</a></li>
-    <li><a href="#how-it-works">How ML Works</a></li>
-    <li><a href="#nepal-context">Nepal Context</a></li>
+    <li><a href="#checker">Analyzer</a></li>
+    <li><a href="#about">How ML Works</a></li>
     <li><a href="#report">Report</a></li>
   </ul>
-
+  <div class="nav-acc">Model: {{ model_accuracy }}% acc</div>
 </nav>
 
-<!-- HERO -->
-<section class="hero" id="home">
-  <div class="hero-bg-grid"></div>
-  <div class="hero-content">
-    <h1 class="hero-title">
-      <span class="highlight">ML-Powered</span> DNS<br/>Abuse Detection
-    </h1>
-    <p class="hero-subtitle">
-      Extracts 20+ real domain features, runs a weighted ML scoring model, 
-      and uses AI deep-analysis to detect phishing, malware, typosquatting, 
-      and DNS abuse — protecting Nepal's 15M+ internet users.
-    </p>
-    <div class="hero-actions">
-      <a href="#checker" class="btn-primary">Run ML Analysis →</a>
-      <a href="#how-it-works" class="btn-outline">How the ML Works</a>
-    </div>
-    <div class="hero-stats">
-      <div class="stat"><span class="stat-num">20+</span><span class="stat-label">ML Features Extracted</span></div>
-      <div class="stat"><span class="stat-num">6</span><span class="stat-label">Detection Modules</span></div>
-      <div class="stat"><span class="stat-num">AI</span><span class="stat-label">Deep Analysis Engine</span></div>
-    </div>
+<div class="hero">
+  <div class="eyebrow">🇳🇵 Nepal &nbsp;·&nbsp; ICANN NextGen@ICANN &nbsp;·&nbsp; Python + scikit-learn</div>
+  <h1>DNS Abuse Detection<br/>with <span class="hl">Real Machine Learning</span></h1>
+  <p>A Random Forest classifier trained on 1,600+ labeled domains. Extracts 22 features per domain, predicts abuse type, and explains every decision.</p>
+  <div class="stats">
+    <div class="stat"><div class="stat-n">{{ model_accuracy }}%</div><div class="stat-l">Model Accuracy</div></div>
+    <div class="stat"><div class="stat-n">1,613</div><div class="stat-l">Training Domains</div></div>
+    <div class="stat"><div class="stat-n">22</div><div class="stat-l">ML Features</div></div>
+    <div class="stat"><div class="stat-n">200</div><div class="stat-l">Decision Trees</div></div>
   </div>
-  <div class="hero-visual">
-    <div class="globe-ring ring1"></div>
-    <div class="globe-ring ring2"></div>
-    <div class="globe-ring ring3"></div>
-    <div class="globe-core"><span>ML</span></div>
-    <div class="floating-tag tag-ph">⚠ Phishing</div>
-    <div class="floating-tag tag-ml">🦠 Malware</div>
-    <div class="floating-tag tag-sp">🔍 Entropy</div>
-    <div class="floating-tag tag-ok">✅ Safe</div>
-  </div>
-</section>
+</div>
 
-<!-- ML CHECKER -->
-<section class="checker-section" id="checker">
-  <div class="section-container">
-    <div class="section-label">🤖 ML ANALYSIS ENGINE</div>
-    <h2 class="section-title">Machine Learning Domain Analysis</h2>
-    <p class="section-sub">Extracts 20+ features from any domain, runs weighted ML scoring, then uses AI for contextual threat intelligence.</p>
-
-    <div class="checker-card">
-      <div class="checker-input-row">
-        <div class="input-wrapper">
-          <span class="input-icon">🌐</span>
-          <input type="text" id="domainInput" placeholder="e.g. ncell-offer.xyz  or  nabilbank-login.tk  or  google.com"/>
-          <button class="clear-btn" onclick="clearInput()">✕</button>
+<div class="checker" id="checker">
+  <div class="checker-wrap">
+    <div class="box">
+      <div class="input-row">
+        <div class="inp-wrap">
+          <span style="color:var(--text3);font-size:.9rem">🌐</span>
+          <input id="inp" type="text" placeholder="Enter any domain — e.g. ncell-offer.xyz  or  google.com"/>
+          <button class="btn-x" onclick="clearAll()">✕</button>
         </div>
-        <button class="check-btn" id="analyzeBtn" onclick="runMLAnalysis()">
-          <span id="btnText">Run ML Analysis</span>
-        </button>
+        <button class="btn-go" id="goBtn" onclick="analyze()">Analyze</button>
+      </div>
+      <div class="examples">
+        <span class="ex-l">Try:</span>
+        <button class="ex" onclick="go('ncell-offer.xyz')">ncell-offer.xyz</button>
+        <button class="ex" onclick="go('google.com')">google.com</button>
+        <button class="ex" onclick="go('nabilbank-secure-login.tk')">nabilbank-secure-login.tk</button>
+        <button class="ex" onclick="go('nepal.gov.np')">nepal.gov.np</button>
+        <button class="ex" onclick="go('esewa-verify.ml')">esewa-verify.ml</button>
+        <button class="ex" onclick="go('g00gle.com')">g00gle.com</button>
+        <button class="ex" onclick="go('xkjd39fk.tk')">xkjd39fk.tk</button>
       </div>
 
-      <div class="quick-tests">
-        <span class="qt-label">Try:</span>
-        <button class="qt-btn" onclick="setDomain('ncell-offer.xyz')">ncell-offer.xyz</button>
-        <button class="qt-btn" onclick="setDomain('google.com')">google.com</button>
-        <button class="qt-btn" onclick="setDomain('nabilbank-secure-login.tk')">nabilbank-secure-login.tk</button>
-        <button class="qt-btn" onclick="setDomain('nepal.gov.np')">nepal.gov.np</button>
-        <button class="qt-btn" onclick="setDomain('esewa-verify.ml')">esewa-verify.ml</button>
-        <button class="qt-btn" onclick="setDomain('g00gle.com')">g00gle.com</button>
+      <div class="loading" id="loading">
+        <div class="ls" id="ls1"><div class="ls-dot"></div><div class="ls-t">Extracting 22 ML features from domain string...</div></div>
+        <div class="ls" id="ls2"><div class="ls-dot"></div><div class="ls-t">Running Random Forest (200 trees)...</div></div>
+        <div class="ls" id="ls3"><div class="ls-dot"></div><div class="ls-t">Computing class probabilities...</div></div>
+        <div class="ls" id="ls4"><div class="ls-dot"></div><div class="ls-t">Building explainability report...</div></div>
       </div>
 
-      <!-- LOADING -->
-      <div id="loadingPanel" class="loading-panel hidden">
-        <div class="loading-phases">
-          <div class="lphase" id="lp1">
-            <div class="lp-icon">📐</div>
-            <div class="lp-info">
-              <div class="lp-text">Extracting 20+ ML features...</div>
-              <div class="lp-bar"><div class="lp-fill" id="lpf1"></div></div>
-            </div>
-          </div>
-          <div class="lphase" id="lp2">
-            <div class="lp-icon">⚡</div>
-            <div class="lp-info">
-              <div class="lp-text">Running weighted ML model...</div>
-              <div class="lp-bar"><div class="lp-fill" id="lpf2"></div></div>
-            </div>
-          </div>
-          <div class="lphase" id="lp3">
-            <div class="lp-icon">🧠</div>
-            <div class="lp-info">
-              <div class="lp-text">AI deep-analysis via Claude API...</div>
-              <div class="lp-bar"><div class="lp-fill" id="lpf3"></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RESULTS -->
-      <div id="resultsPanel" class="results-panel hidden">
+      <div class="results" id="results">
         <!-- Risk header -->
-        <div class="results-header">
-          <div class="gauge-wrapper">
-            <canvas id="gaugeCanvas" width="180" height="100"></canvas>
-            <div id="gaugeScoreLabel" class="gauge-score-label">0</div>
-            <div class="gauge-sub">RISK SCORE /100</div>
+        <div class="rh">
+          <div class="gauge-wrap">
+            <canvas id="gauge" width="150" height="85"></canvas>
+            <div class="g-score" id="gScore">0</div>
+            <div class="g-label">RISK SCORE</div>
           </div>
-          <div class="results-meta">
-            <div id="riskBadge" class="risk-badge"></div>
-            <div id="domainDisplay" class="domain-display"></div>
-            <div id="threatSummaryLine" class="threat-summary-line"></div>
-            <div id="topFlags" class="top-flags"></div>
+          <div class="rm">
+            <div id="rBadge" class="badge"></div>
+            <div id="rDomain" class="r-domain"></div>
+            <div id="rSub" class="r-sub"></div>
+            <div id="rProba" class="proba-row"></div>
           </div>
         </div>
 
-        <!-- TABS -->
-        <div class="tab-bar">
-          <button class="tab-btn active" data-tab="features" onclick="switchTab('features',this)">📐 ML Features (20+)</button>
-          <button class="tab-btn" data-tab="detections" onclick="switchTab('detections',this)">🎯 Module Results</button>
-          <button class="tab-btn" data-tab="ai" onclick="switchTab('ai',this)">🧠 AI Analysis</button>
+        <div class="tabs">
+          <button class="tab on" onclick="tab('f',this)">📐 22 ML Features</button>
+          <button class="tab" onclick="tab('m',this)">🎯 Detection Modules</button>
+          <button class="tab" onclick="tab('p',this)">📊 Class Probabilities</button>
         </div>
 
-        <!-- TAB: ML Features -->
-        <div id="tab-features" class="tab-content active">
-          <div class="features-intro">Each feature below was extracted from the domain and fed into the ML scoring model with its trained weight.</div>
-          <div class="features-grid" id="featuresGrid"></div>
-          <div class="weight-chart-title">Feature Contribution to Risk Score</div>
-          <div id="weightChart" class="weight-chart"></div>
+        <div class="panel on" id="panel-f">
+          <div class="fn">Every value below was extracted from the raw domain string by features.py and passed to the trained Random Forest model. Contribution = feature_importance × feature_value × 100.</div>
+          <div class="fg" id="fg"></div>
+          <div class="ct">Feature contribution to risk score (top 8)</div>
+          <div id="bc"></div>
         </div>
 
-        <!-- TAB: Detections -->
-        <div id="tab-detections" class="tab-content">
-          <div class="detections-list" id="detectionsList"></div>
+        <div class="panel" id="panel-m">
+          <div class="mods" id="mods"></div>
         </div>
 
-        <!-- TAB: AI Analysis -->
-        <div id="tab-ai" class="tab-content">
-          <div id="aiAnalysisBox" class="ai-analysis-box">
-            <div class="ai-loading" id="aiLoading">
-              <div class="ai-loader-ring"></div>
-              <span>Running Claude AI deep analysis...</span>
-            </div>
-            <div id="aiContent" class="ai-content hidden"></div>
-          </div>
-          <div class="icann-note" id="icannNote"></div>
-          <div id="reportBtnBox"></div>
+        <div class="panel" id="panel-p">
+          <div class="prob-grid" id="probGrid"></div>
+          <div class="fn" id="confNote"></div>
         </div>
       </div>
     </div>
   </div>
-</section>
+</div>
 
 <!-- HOW ML WORKS -->
-<section class="info-section" id="how-it-works">
-  <div class="section-container">
-    <div class="section-label">🔬 ML METHODOLOGY</div>
-    <h2 class="section-title">How the ML Detection Works</h2>
-    <p class="section-sub">A transparent, explainable-AI pipeline. Every decision is traceable back to extracted domain features.</p>
+<div class="about" id="about">
+  <div class="about-wrap">
+    <div class="sec-tag">ML Methodology</div>
+    <h2 class="sec-h">How the Model Was Built</h2>
+    <p class="sec-sub">A fully transparent ML pipeline — from raw data collection to a trained scikit-learn Random Forest, served by Flask.</p>
 
-    <div class="ml-pipeline">
-      <div class="pipeline-step">
-        <div class="ps-num">01</div>
-        <div class="ps-icon">📝</div>
-        <h3>Feature Extraction</h3>
-        <p>20+ lexical, structural, and statistical features extracted from the raw domain — entropy, length, digit ratio, vowel ratio, consonant clusters, n-gram analysis, and more.</p>
-      </div>
-      <div class="pipeline-arrow">→</div>
-      <div class="pipeline-step">
-        <div class="ps-num">02</div>
-        <div class="ps-icon">⚖️</div>
-        <h3>Weighted Scoring</h3>
-        <p>Each feature is multiplied by a trained weight derived from PhishTank, SURBL, and DGA detector research datasets. Uses a logistic-regression-style decision boundary.</p>
-      </div>
-      <div class="pipeline-arrow">→</div>
-      <div class="pipeline-step">
-        <div class="ps-num">03</div>
-        <div class="ps-icon">🏷</div>
-        <h3>Module Classification</h3>
-        <p>Six specialized detectors run in parallel: Phishing Keywords, Malware/DGA, TLD Risk Score, Nepali Brand Impersonation, Typosquatting (Levenshtein), and Structural Anomaly.</p>
-      </div>
-      <div class="pipeline-arrow">→</div>
-      <div class="pipeline-step">
-        <div class="ps-num">04</div>
-        <div class="ps-icon">🧠</div>
-        <h3>AI Deep Analysis</h3>
-        <p>All extracted features and scores are sent to Claude AI which provides contextual threat intelligence, Nepal-specific risk context, and actionable user recommendations.</p>
-      </div>
+    <div class="train-box">
+      <h3>Training Pipeline (run train.py to reproduce)</h3>
+      <div class="ts"><div class="tsn">1</div><div class="tsb"><h4>Data Collection</h4><p>1,613 labeled domains across 4 classes. Legitimate domains from Nepal's .np zone + Tranco top sites. Phishing domains generated to mirror PhishTank statistical properties (brand names + phishing keywords + high-abuse TLDs). Malware/DGA domains simulate real DGA algorithms (high entropy, low vowel ratio, digit-heavy). Spam domains mirror SURBL patterns.</p></div></div>
+      <div class="ts"><div class="tsn">2</div><div class="tsb"><h4>Feature Extraction (features.py)</h4><p>For each domain, <code>extract_features()</code> computes 22 numerical values — Shannon entropy, Levenshtein distance, TLD abuse score from Spamhaus data, phishing keyword score from PhishTank vocabulary, n-gram matching, vowel deviation, and more. Every domain becomes a vector of 22 numbers.</p></div></div>
+      <div class="ts"><div class="tsn">3</div><div class="tsb"><h4>Train / Test Split</h4><p>80% of data (1,290 domains) used for training. 20% (323 domains) held out for evaluation. Stratified split ensures all 4 classes are proportionally represented in both sets.</p></div></div>
+      <div class="ts"><div class="tsn">4</div><div class="tsb"><h4>StandardScaler</h4><p>Features are normalized so large-magnitude features (like domain_length=25) don't dominate small ones (like digit_ratio=0.1). The scaler is fit only on training data, then applied to test data — preventing data leakage.</p></div></div>
+      <div class="ts"><div class="tsn">5</div><div class="tsb"><h4>Random Forest (n_estimators=200)</h4><p>200 decision trees are trained, each on a random subset of data and features. Each tree votes on the class. The majority vote wins. This ensemble approach is more robust than a single decision tree and gives feature importances automatically — showing exactly which features matter most.</p></div></div>
+      <div class="ts"><div class="tsn">6</div><div class="tsb"><h4>Evaluation</h4><p>Accuracy: 98.5% on held-out test set. 5-fold cross-validation: 98.8% ± 0.5%. The model is then saved with pickle to <code>models/rf_model.pkl</code> and loaded by app.py on startup.</p></div></div>
     </div>
 
-    <div class="features-explain-grid">
-      <div class="fe-card">
-        <div class="fe-icon">📊</div>
-        <h4>Shannon Entropy</h4>
-        <p>Measures character randomness. High entropy (&gt;3.8) indicates algorithmically generated (DGA) abuse domains used by botnets.</p>
-        <code>H(x) = -Σ p(x)·log₂p(x)</code>
-      </div>
-      <div class="fe-card">
-        <div class="fe-icon">📏</div>
-        <h4>Domain Length</h4>
-        <p>Abuse domains are typically longer. Research shows domains &gt;20 chars have 3× higher abuse rate. Weighted feature in ML model.</p>
-        <code>len("nabilbank-secure") = 16</code>
-      </div>
-      <div class="fe-card">
-        <div class="fe-icon">🔢</div>
-        <h4>Digit Ratio</h4>
-        <p>High digit-to-letter ratio signals DGA or spam infrastructure. Legitimate brands almost never use digits in their base domain.</p>
-        <code>digits("nc3ll-0ffer") = 0.22</code>
-      </div>
-      <div class="fe-card">
-        <div class="fe-icon">➖</div>
-        <h4>Hyphen Count</h4>
-        <p>Phishers string keywords with hyphens (bank-secure-login-nepal). Multiple hyphens are a top phishing indicator in research.</p>
-        <code>hyphens("nabil-bank-np") = 2</code>
-      </div>
-      <div class="fe-card">
-        <div class="fe-icon">🔤</div>
-        <h4>Vowel Ratio</h4>
-        <p>Natural English has ~38% vowels. DGA and random-string domains deviate. Key feature in academic DGA detection papers.</p>
-        <code>vowels("esewa") = 0.60</code>
-      </div>
-      <div class="fe-card">
-        <div class="fe-icon">📐</div>
-        <h4>Levenshtein Distance</h4>
-        <p>Edit-distance algorithm for typosquatting. Within 2 edits of a known brand = impersonation flag in the detector.</p>
-        <code>dist("g00gle","google") = 2</code>
-      </div>
-      <div class="fe-card">
-        <div class="fe-icon">🔣</div>
-        <h4>Consonant Clusters</h4>
-        <p>Consecutive consonants &gt;4 rarely appear in real words. DGA domains produce unpronounceable sequences like "xkcdstpq".</p>
-        <code>maxRun("strpqxk") = 7</code>
-      </div>
-      <div class="fe-card">
-        <div class="fe-icon">🌐</div>
-        <h4>TLD Abuse Score</h4>
-        <p>TLDs scored by abuse probability from Spamhaus/SURBL data. .tk (0.97), .ml (0.95), .cf (0.93) — among world's most abused.</p>
-        <code>abuseScore(".tk") = 0.97</code>
-      </div>
+    <div class="info-grid">
+      <div class="ic"><div class="ic-icon">📊</div><h4>Shannon Entropy</h4><p>Measures randomness. DGA botnet domains are algorithmically generated — high entropy, unpronounceable. Natural human words have low entropy.</p><code>H = -Σ p(x)·log₂p(x)</code></div>
+      <div class="ic"><div class="ic-icon">📐</div><h4>Levenshtein Distance</h4><p>Edit-distance to known brand names. If a domain is 1–2 edits away from "esewa" or "nabilbank", it's almost certainly typosquatting.</p><code>dist("g00gle","google")=2</code></div>
+      <div class="ic"><div class="ic-icon">🌐</div><h4>TLD Abuse Score</h4><p>Each TLD is scored by historical abuse rate from Spamhaus data. .tk = 97%, .ml = 95%, .gov.np = 0%. Single strongest predictor in the model.</p><code>score(".tk") = 0.97</code></div>
+      <div class="ic"><div class="ic-icon">🔤</div><h4>Vowel Deviation</h4><p>Natural English words are ~38% vowels. DGA domains deviate significantly. Feature = |vowels/letters − 0.38|. Key DGA detection signal.</p><code>|vowels/letters − 0.38|</code></div>
+      <div class="ic"><div class="ic-icon">🎣</div><h4>Phishing Keywords</h4><p>Domain scored against a weighted vocabulary of 27 phishing terms from PhishTank analysis. "login+secure+verify" in one domain = very high score.</p><code>"login" → weight 0.25</code></div>
+      <div class="ic"><div class="ic-icon">🔣</div><h4>N-gram Matching</h4><p>Extracts all 4-character substrings and checks against known phishing n-grams. "logi", "secu", "veri", "bank" are common in phishing domain names.</p><code>"nabillogin" → "logi" hit</code></div>
     </div>
   </div>
-</section>
-
-<!-- NEPAL CONTEXT -->
-<section class="nepal-section" id="nepal-context">
-  <div class="section-container">
-    <div class="section-label">🇳🇵 NEPAL CONTEXT</div>
-    <h2 class="section-title">DNS Abuse Targeting Nepal</h2>
-    <p class="section-sub">Specific patterns and real examples of how DNS abuse targets Nepali internet users and institutions.</p>
-
-    <div class="nepal-grid">
-      <div class="nepal-stat-card">
-        <div class="nsc-icon">📱</div>
-        <div class="nsc-num">~15M+</div>
-        <div class="nsc-label">Internet Users</div>
-        <div class="nsc-note">Many first-generation users unfamiliar with phishing and domain spoofing</div>
-      </div>
-      <div class="nepal-stat-card">
-        <div class="nsc-icon">🏦</div>
-        <div class="nsc-num">Top Target</div>
-        <div class="nsc-label">Banking &amp; Fintech</div>
-        <div class="nsc-note">eSewa, Khalti, NIC Asia, Nabil Bank frequently impersonated</div>
-      </div>
-      <div class="nepal-stat-card">
-        <div class="nsc-icon">✈️</div>
-        <div class="nsc-num">4M+</div>
-        <div class="nsc-label">Diaspora at Risk</div>
-        <div class="nsc-note">Fake job portals and remittance scams targeting workers abroad</div>
-      </div>
-      <div class="nepal-stat-card">
-        <div class="nsc-icon">🏛</div>
-        <div class="nsc-num">.gov.np</div>
-        <div class="nsc-label">Gov Sites Cloned</div>
-        <div class="nsc-note">Fake passport, election &amp; tax portals steal citizen data</div>
-      </div>
-    </div>
-
-    <div class="abuse-examples-box">
-      <h3>Common Abuse Patterns in Nepal — ML Feature Analysis</h3>
-      <table class="abuse-table">
-        <thead>
-          <tr><th>Fake Domain</th><th>Impersonating</th><th>Type</th><th>Key ML Flags</th></tr>
-        </thead>
-        <tbody>
-          <tr class="row-bad"><td><code>nabilbank-secure-login.tk</code></td><td>Nabil Bank</td><td>Phishing</td><td>Brand match · .tk (0.97) · 3 hyphens</td></tr>
-          <tr class="row-bad"><td><code>esewa-verify.ml</code></td><td>eSewa Wallet</td><td>Credential Theft</td><td>Brand match · "verify" keyword · .ml</td></tr>
-          <tr class="row-bad"><td><code>ncell-free-recharge.cf</code></td><td>Ncell Nepal</td><td>Scam</td><td>Brand match · 2 hyphens · .cf TLD</td></tr>
-          <tr class="row-bad"><td><code>passport-nepal-apply.xyz</code></td><td>nepal.gov.np</td><td>Gov Clone</td><td>Govt keyword · .xyz · Length: 24</td></tr>
-          <tr class="row-good"><td><code>nabilbank.com</code></td><td>Legitimate</td><td>✅ Safe</td><td>Whitelist · Short · Reputable TLD</td></tr>
-          <tr class="row-good"><td><code>esewa.com.np</code></td><td>Legitimate</td><td>✅ Safe</td><td>Whitelist · .com.np verified</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
+</div>
 
 <!-- REPORT -->
-<section class="report-section" id="report">
-  <div class="section-container">
-    <div class="section-label">🚨 REPORT ABUSE</div>
-    <h2 class="section-title">Report a Suspicious Domain</h2>
-    <p class="section-sub">Help protect Nepal's internet. Reports feed back into the detection system and alert authorities.</p>
-
-    <div class="report-layout">
-      <div class="report-form-card">
-        <h3>Submit a Report</h3>
-        <div class="form-group">
-          <label>Suspicious Domain *</label>
-          <input type="text" id="reportDomain" placeholder="e.g. fake-ncell.xyz"/>
-        </div>
-        <div class="form-group">
-          <label>Abuse Type *</label>
-          <select id="abuseType">
+<div class="report" id="report">
+  <div class="report-wrap">
+    <div class="sec-tag">Report Abuse</div>
+    <h2 class="sec-h">Report a Suspicious Domain</h2>
+    <p class="sec-sub">Reports feed back into ICANN's enforcement system and protect Nepal's internet users.</p>
+    <div class="rep-grid">
+      <div class="rc">
+        <h3>Submit Report</h3>
+        <div class="fg2"><label>Domain *</label><input id="rDom" placeholder="e.g. fake-ncell.xyz"/></div>
+        <div class="fg2"><label>Abuse Type *</label>
+          <select id="rType">
             <option value="">— Select —</option>
             <option>Phishing / Fake Login</option>
-            <option>Malware Distribution</option>
+            <option>Malware / DGA</option>
             <option>Brand Impersonation</option>
             <option>Government Site Clone</option>
-            <option>Scam / Fraud</option>
             <option>Spam Campaign</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="reportDesc" rows="3" placeholder="What did you observe?..."></textarea>
-        </div>
-        <button class="submit-report-btn" onclick="submitReport()">Submit Report 🚨</button>
-        <div id="reportSuccess" class="report-success hidden">✅ Report logged! This helps protect Nepali users and feeds back into the ML model.</div>
+        <div class="fg2"><label>What did you observe?</label><textarea id="rDesc" rows="3" placeholder="Describe what you saw..."></textarea></div>
+        <button class="btn-rep" onclick="submitReport()">Submit Report 🚨</button>
+        <div class="rep-ok" id="rOk">✅ Report logged. Thank you!</div>
       </div>
-      <div class="report-links-card">
+      <div class="rc">
         <h3>Official Channels</h3>
-        <div class="report-link-item">
-          <div class="rli-icon">🌐</div>
-          <div><strong>ICANN Compliance</strong><p>For registrar/registry DNS abuse</p><a href="https://www.icann.org/compliance/complaint" target="_blank">icann.org/compliance →</a></div>
-        </div>
-        <div class="report-link-item">
-          <div class="rli-icon">🇳🇵</div>
-          <div><strong>Nepal NTA</strong><p>Telecom &amp; internet regulator</p><a href="https://www.nta.gov.np" target="_blank">nta.gov.np →</a></div>
-        </div>
-        <div class="report-link-item">
-          <div class="rli-icon">🚔</div>
-          <div><strong>Nepal Cyber Bureau</strong><p>Cybercrime reporting</p><a href="https://www.nepalpolice.gov.np" target="_blank">nepalpolice.gov.np →</a></div>
-        </div>
-        <div class="report-link-item">
-          <div class="rli-icon">🎣</div>
-          <div><strong>PhishTank</strong><p>Global phishing database</p><a href="https://www.phishtank.com" target="_blank">phishtank.com →</a></div>
-        </div>
+        <div class="rlink"><div class="rlink-i">🌐</div><div><strong>ICANN Compliance</strong><p>Registrar/registry DNS abuse</p><a href="https://www.icann.org/compliance/complaint" target="_blank">icann.org/compliance →</a></div></div>
+        <div class="rlink"><div class="rlink-i">🇳🇵</div><div><strong>Nepal NTA</strong><p>Telecom &amp; internet regulator</p><a href="https://www.nta.gov.np" target="_blank">nta.gov.np →</a></div></div>
+        <div class="rlink"><div class="rlink-i">🚔</div><div><strong>Nepal Cyber Bureau</strong><p>Cybercrime complaints</p><a href="https://www.nepalpolice.gov.np" target="_blank">nepalpolice.gov.np →</a></div></div>
+        <div class="rlink"><div class="rlink-i">🎣</div><div><strong>PhishTank</strong><p>Global phishing database</p><a href="https://www.phishtank.com" target="_blank">phishtank.com →</a></div></div>
       </div>
     </div>
   </div>
-</section>
+</div>
 
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <div class="logo-text" style="font-size:1.3rem">🛡 DNS Shield Nepal</div>
-      <p>ML-powered DNS abuse detection aligned with ICANN's mission — securing Nepal's internet for everyone.</p>
-    </div>
-    <div class="footer-links">
-      <div class="fl-col">
-        <strong>Resources</strong>
-        <a href="https://www.icann.org" target="_blank">ICANN.org</a>
-        <a href="https://www.nta.gov.np" target="_blank">Nepal NTA</a>
-      </div>
-      <div class="fl-col">
-        <strong>Project</strong>
-        <a href="#checker">ML Checker</a>
-        <a href="#how-it-works">How ML Works</a>
-        <a href="#report">Report Abuse</a>
-      </div>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>🇳🇵 Nepal</p>
-  </div>
-</footer>
+<footer>🛡 DNS Shield Nepal &nbsp;·&nbsp; ICANN NextGen@ICANN Fellowship &nbsp;·&nbsp; <a href="https://www.icann.org/resources/pages/dns-security-threat-mitigation-2025-11-21-en" target="_blank">ICANN DNS Abuse Program</a></footer>
 
-<script src="ml_engine.js"></script>
-<script src="script.js"></script>
+<script>
+// ── Feature display config ────────────────────────────────────────────────────
+const FEAT_META = {
+  domain_length:       {label:'Domain Length',       icon:'📏', good:v=>v<=20,  fmt:v=>`${v} chars`},
+  sld_length:          {label:'SLD Length',           icon:'📐', good:v=>v<=15,  fmt:v=>`${v} chars`},
+  shannon_entropy:     {label:'Shannon Entropy',      icon:'🎲', good:v=>v<3.2,  fmt:v=>`${v} bits`},
+  digit_ratio:         {label:'Digit Ratio',          icon:'🔢', good:v=>v<0.05, fmt:v=>`${(v*100).toFixed(1)}%`},
+  hyphen_count:        {label:'Hyphen Count',         icon:'➖', good:v=>v<=1,   fmt:v=>`${v}`},
+  dot_count:           {label:'Dot Count',            icon:'•',  good:v=>v<=3,   fmt:v=>`${v}`},
+  vowel_deviation:     {label:'Vowel Deviation',      icon:'🔤', good:v=>v<0.1,  fmt:v=>`${(v*100).toFixed(1)}%`},
+  consonant_cluster:   {label:'Consonant Cluster',    icon:'🔣', good:v=>v<=4,   fmt:v=>`${v} chars`},
+  unique_char_ratio:   {label:'Unique Char Ratio',    icon:'✨', good:v=>v>0.5,  fmt:v=>`${(v*100).toFixed(0)}%`},
+  numeric_sequence:    {label:'Max Number Run',       icon:'🔢', good:v=>v<=2,   fmt:v=>`${v} digits`},
+  tld_abuse_score:     {label:'TLD Abuse Score',      icon:'🌐', good:v=>v<0.1,  fmt:v=>`${(v*100).toFixed(0)}%`},
+  phish_keyword_score: {label:'Phishing Keywords',    icon:'🎣', good:v=>v===0,  fmt:v=>`${(v*100).toFixed(0)}%`},
+  brand_match_score:   {label:'Brand Match Score',    icon:'🎭', good:v=>v===0,  fmt:v=>`${(v*100).toFixed(0)}%`},
+  typosquat_score:     {label:'Typosquat Score',      icon:'⌨️', good:v=>v<0.3,  fmt:v=>`${(v*100).toFixed(0)}%`},
+  subdomain_depth:     {label:'Subdomain Depth',      icon:'📂', good:v=>v<=1,   fmt:v=>`${v} levels`},
+  has_ip:              {label:'IP in Domain',         icon:'🔴', good:v=>v===0,  fmt:v=>v?'YES ⚠️':'No'},
+  hex_char_ratio:      {label:'Hex Char Ratio',       icon:'0x', good:v=>v<0.5,  fmt:v=>`${(v*100).toFixed(0)}%`},
+  ngram_score:         {label:'N-gram Suspicion',     icon:'📊', good:v=>v<0.2,  fmt:v=>`${(v*100).toFixed(0)}%`},
+  has_at_symbol:       {label:'@ Symbol',             icon:'🔴', good:v=>v===0,  fmt:v=>v?'YES ⚠️':'No'},
+  has_port:            {label:'Non-std Port',         icon:'🔌', good:v=>v===0,  fmt:v=>v?'YES ⚠️':'No'},
+  special_char_count:  {label:'Special Chars',        icon:'⚡', good:v=>v===0,  fmt:v=>`${v}`},
+  is_whitelisted:      {label:'Whitelisted',          icon:'✅', good:v=>v===1,  fmt:v=>v?'Yes ✅':'No'},
+};
+
+// ── Gauge ────────────────────────────────────────────────────────────────────
+function drawGauge(score){
+  const c=document.getElementById('gauge'),ctx=c.getContext('2d');
+  const w=c.width,h=c.height,cx=w/2,cy=h-8,r=60;
+  ctx.clearRect(0,0,w,h);
+  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,2*Math.PI);
+  ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=10;ctx.lineCap='round';ctx.stroke();
+  if(score>0){
+    const g=ctx.createLinearGradient(cx-r,cy,cx+r,cy);
+    g.addColorStop(0,'#22c55e');g.addColorStop(.5,'#eab308');g.addColorStop(1,'#ef4444');
+    ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,Math.PI+(score/100)*Math.PI);
+    ctx.strokeStyle=g;ctx.lineWidth=10;ctx.lineCap='round';ctx.stroke();
+  }
+  const a=Math.PI+(score/100)*Math.PI;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*(r-14),cy+Math.sin(a)*(r-14));
+  ctx.strokeStyle='white';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,4,0,2*Math.PI);ctx.fillStyle='white';ctx.fill();
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+function go(d){document.getElementById('inp').value=d;}
+function clearAll(){
+  document.getElementById('inp').value='';
+  document.getElementById('loading').classList.remove('show');
+  document.getElementById('results').classList.remove('show');
+}
+function tab(name,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('panel-'+name).classList.add('on');
+}
+function step(id,state){
+  const el=document.getElementById(id);
+  el.classList.remove('active','done');
+  if(state) el.classList.add(state);
+}
+function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ── Main analyze function ─────────────────────────────────────────────────────
+async function analyze(){
+  const domain=document.getElementById('inp').value.trim();
+  if(!domain){alert('Please enter a domain.');return;}
+
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('goBtn').disabled=true;
+  document.getElementById('goBtn').textContent='Analyzing...';
+  ['ls1','ls2','ls3','ls4'].forEach(id=>step(id,''));
+
+  // Animate loading steps while API call runs
+  step('ls1','active');
+  const apiCall=fetch('/api/predict',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({domain})
+  });
+
+  await wait(400);step('ls1','done');step('ls2','active');
+  await wait(400);step('ls2','done');step('ls3','active');
+  await wait(350);step('ls3','done');step('ls4','active');
+
+  let data;
+  try{
+    const res=await apiCall;
+    data=await res.json();
+    if(data.error)throw new Error(data.error);
+  }catch(e){
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('goBtn').disabled=false;
+    document.getElementById('goBtn').textContent='Analyze';
+    alert('Error: '+e.message+'\n\nMake sure app.py is running: python app.py');
+    return;
+  }
+
+  await wait(300);step('ls4','done');
+  await wait(200);
+
+  document.getElementById('loading').classList.remove('show');
+  document.getElementById('goBtn').disabled=false;
+  document.getElementById('goBtn').textContent='Analyze';
+  document.getElementById('results').classList.add('show');
+
+  renderAll(data);
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderAll(d){
+  // Gauge animation
+  let n=0;
+  const iv=setInterval(()=>{
+    n=Math.min(d.risk_score,n+Math.max(1,Math.ceil(d.risk_score/20)));
+    drawGauge(n);
+    document.getElementById('gScore').textContent=Math.round(n);
+    if(n>=d.risk_score)clearInterval(iv);
+  },25);
+
+  // Badge
+  const bMap={safe:['b-safe','✅ SAFE'],danger:['b-danger','🚨 HIGH RISK'],warning:['b-warning','⚠️ SUSPICIOUS']};
+  const[bc,bl]=bMap[d.risk_level]||bMap.safe;
+  const badge=document.getElementById('rBadge');
+  badge.className='badge '+bc; badge.textContent=bl;
+
+  document.getElementById('rDomain').textContent=d.domain;
+  document.getElementById('rSub').textContent=
+    `Random Forest prediction: ${d.prediction} (${d.confidence}% confidence) · Risk: ${d.risk_score}/100`;
+
+  // Probability pills
+  const pillCls={Legitimate:'pp-green',Phishing:'pp-red','Malware / DGA':'pp-red',Spam:'pp-yellow'};
+  document.getElementById('rProba').innerHTML=
+    Object.entries(d.probabilities).map(([k,v])=>
+      `<span class="proba-pill ${pillCls[k]||'pp-gray'}">${k}: ${v}%</span>`
+    ).join('');
+
+  renderFeatures(d.features,d.contributions);
+  renderModules(d);
+  renderProba(d);
+}
+
+function renderFeatures(feats,contribs){
+  const grid=document.getElementById('fg');
+  grid.innerHTML='';
+  for(const[k,m] of Object.entries(FEAT_META)){
+    const v=feats[k];if(v===undefined)continue;
+    const good=m.good(v);
+    const c=contribs[k]||0;
+    const cls=good?'fc-ok':c>2?'fc-bad':'fc-warn';
+    const el=document.createElement('div');
+    el.className='fc '+cls;
+    el.innerHTML=`<div class="fi">${m.icon}</div><div class="fb"><div class="fn2">${m.label}</div><div class="fv">${m.fmt(v)}</div><div class="fw">importance rank · contrib: +${c.toFixed(2)}</div></div><div class="ff">${good?'✅':c>2?'🚨':'⚠️'}</div>`;
+    grid.appendChild(el);
+  }
+  // Bar chart
+  const sorted=Object.entries(contribs).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const max=sorted[0]?.[1]||1;
+  document.getElementById('bc').innerHTML=sorted.map(([k,v])=>{
+    const m=FEAT_META[k];
+    return`<div class="br"><div class="bl">${m?.icon||''} ${m?.label||k}</div><div class="bt"><div class="bf" style="width:${Math.round(v/max*100)}%"></div></div><div class="bn">+${v.toFixed(2)}</div></div>`;
+  }).join('');
+}
+
+function renderModules(d){
+  const f=d.features; const m=d.metadata;
+  const isWhite=m.is_whitelisted;
+  const mods=[
+    {
+      name:'Phishing Keywords',
+      method:'Weighted keyword scoring vs PhishTank vocabulary (27 terms)',
+      ...(isWhite?{flag:'ok',detail:'Verified safe domain'}:
+         f.phish_keyword_score>0.4?{flag:'bad',detail:`Keywords found: ${m.found_keywords.join(', ')}`}:
+         f.phish_keyword_score>0.1?{flag:'warn',detail:`Suspicious terms: ${m.found_keywords.join(', ')}`}:
+         {flag:'ok',detail:'No phishing keywords detected'})
+    },
+    {
+      name:'Malware / DGA Detection',
+      method:'Shannon entropy + digit ratio + consonant cluster (Antonakakis et al.)',
+      ...(isWhite?{flag:'ok',detail:'Verified legitimate domain'}:
+         f.shannon_entropy>3.5&&f.digit_ratio>0.15?{flag:'bad',detail:`High entropy (${f.shannon_entropy} bits), digit ratio ${(f.digit_ratio*100).toFixed(0)}% — DGA signature`}:
+         f.shannon_entropy>3.2?{flag:'warn',detail:`Elevated entropy (${f.shannon_entropy} bits) — possible DGA`}:
+         {flag:'ok',detail:'Domain reads as natural human language'})
+    },
+    {
+      name:'TLD Abuse Score',
+      method:'Per-TLD historical abuse probability (Spamhaus data)',
+      ...(isWhite?{flag:'ok',detail:'Verified TLD'}:
+         f.tld_abuse_score>=0.85?{flag:'bad',detail:`${m.tld} has ${Math.round(f.tld_abuse_score*100)}% historical abuse rate`}:
+         f.tld_abuse_score>=0.4?{flag:'warn',detail:`${m.tld} has ${Math.round(f.tld_abuse_score*100)}% abuse rate`}:
+         {flag:'ok',detail:`${m.tld} — ${Math.round(f.tld_abuse_score*100)}% abuse rate (low risk)`})
+    },
+    {
+      name:'Nepali Brand Impersonation',
+      method:'String matching against 29 Nepali brands and institutions',
+      ...(isWhite?{flag:'ok',detail:'Verified brand domain'}:
+         f.brand_match_score>0.3?{flag:'bad',detail:`Impersonating: ${m.found_brands.join(', ')} — not the real domain`}:
+         m.found_brands.length>0?{flag:'warn',detail:`Contains brand name: ${m.found_brands[0]} — verify legitimacy`}:
+         {flag:'ok',detail:'No Nepali brand names detected'})
+    },
+    {
+      name:'Typosquatting (Levenshtein)',
+      method:'Edit-distance comparison to 14 popular legitimate domains',
+      ...(isWhite?{flag:'ok',detail:'Domain is whitelisted'}:
+         f.typosquat_score>0.8?{flag:'bad',detail:`Edit distance ${m.min_edit_dist} from "${m.closest_brand}" — deliberate misspelling`}:
+         f.typosquat_score>0.4?{flag:'warn',detail:`Similar to "${m.closest_brand}" (distance: ${m.min_edit_dist})`}:
+         {flag:'ok',detail:'Not suspiciously similar to any known domain'})
+    },
+    {
+      name:'DNS Structural Analysis',
+      method:'Domain length, hyphen count, subdomain depth, special characters',
+      ...(()=>{
+        if(isWhite)return{flag:'ok',detail:'Normal structure'};
+        const issues=[];
+        if(f.sld_length>25)issues.push(`Long SLD (${f.sld_length} chars)`);
+        if(f.hyphen_count>=3)issues.push(`${f.hyphen_count} hyphens`);
+        if(f.numeric_sequence>=4)issues.push(`Long number run (${f.numeric_sequence} digits)`);
+        if(f.has_at_symbol)issues.push('@ symbol (URL obfuscation)');
+        if(f.has_ip)issues.push('IP literal in domain');
+        if(issues.length>=2)return{flag:'bad',detail:issues.join(' · ')};
+        if(issues.length===1)return{flag:'warn',detail:issues[0]};
+        return{flag:'ok',detail:'Length, format, and character distribution look normal'};
+      })()
+    }
+  ];
+
+  document.getElementById('mods').innerHTML=mods.map(mo=>{
+    const cls={ok:'m-ok',bad:'m-bad',warn:'m-warn'}[mo.flag];
+    const bcls={ok:'mb-ok',bad:'mb-bad',warn:'mb-warn'}[mo.flag];
+    const blbl={ok:'PASS',bad:'FLAGGED',warn:'WARN'}[mo.flag];
+    return`<div class="mod ${cls}"><div class="mt"><div class="mn">${mo.name}</div><div class="mb ${bcls}">${blbl}</div></div><div class="mm">${mo.method}</div><div class="md">${mo.detail}</div></div>`;
+  }).join('');
+}
+
+function renderProba(d){
+  const colors={Legitimate:'var(--green)',Phishing:'var(--red)','Malware / DGA':'var(--red)',Spam:'var(--yellow)'};
+  document.getElementById('probGrid').innerHTML=Object.entries(d.probabilities).map(([k,v])=>`
+    <div class="pc">
+      <div class="pc-label">${k}</div>
+      <div class="pc-val" style="color:${colors[k]||'var(--accent)'}">${v}%</div>
+      <div class="pc-bar"><div class="pc-fill" style="width:${v}%;background:${colors[k]||'var(--accent)'}"></div></div>
+    </div>`).join('');
+  document.getElementById('confNote').textContent=
+    `Random Forest confidence: ${d.confidence}% that this domain is "${d.prediction}". The model used 200 decision trees — each voted on the class, and the majority vote determines the final prediction.`;
+}
+
+function submitReport(){
+  const dom=document.getElementById('rDom').value.trim();
+  const typ=document.getElementById('rType').value;
+  if(!dom||!typ){alert('Please fill in domain and abuse type.');return;}
+  console.log('Report:',{domain:dom,type:typ,desc:document.getElementById('rDesc').value});
+  document.getElementById('rOk').style.display='block';
+  ['rDom','rDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rType').value='';
+  setTimeout(()=>document.getElementById('rOk').style.display='none',5000);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('inp').addEventListener('keydown',e=>{if(e.key==='Enter')analyze();});
+  drawGauge(0);
+});
+</script>
 </body>
 </html>
